@@ -391,7 +391,11 @@ export default function SpotifyTracker() {
               <div className="bg-white p-4 rounded-2xl shadow-2xl border border-green-200 flex flex-col gap-3 w-64 animate-in slide-in-from-bottom-5 mb-4">
                 <div className="text-gray-800 font-medium">
                     <p>¿Enviar recordatorio?</p>
-                    <p className="text-xs text-gray-500 italic mt-1">"bueno, que, no van a pagar o que?"</p>
+                    <p className="text-xs text-gray-500 italic mt-1">"🚨⚠️
+Bueno, que, no van a pagar o que?
+Actualmente te encuentras en mora del pago por concepto de: Spotify Familiar. 
+Paga y sigue disfrutando de tu música favorita
+Notificación automática creada por: Afemos"</p>
                 </div>
                 <div className="flex gap-2">
                     <button onClick={() => setShowWhatsAppConfirm(false)} className="flex-1 py-2 bg-gray-100 rounded-lg text-sm font-bold text-gray-600 hover:bg-gray-200">Cancelar</button>
