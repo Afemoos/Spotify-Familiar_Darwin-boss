@@ -164,11 +164,11 @@ export default function SpotifyTracker() {
   // --- NUEVA FUNCIÓN: ENVIAR AVISO ---
   const sendWhatsAppNotice = () => {
     // Mensaje actualizado según tu requerimiento
-    const message = "🚨⚠️
-    ```Bueno, que, no van a pagar o que?```
-    ```Actualmente te encuentras en mora del pago por concepto de: Spotify Familiar. ```
-    ```Paga y sigue disfrutando de tu música favorita```
-    ```Notificación automática creada por: Afemos```";
+    const message = `🚨⚠️
+    _Bueno, que, no van a pagar o que?_
+    _Actualmente te encuentras en mora del pago por concepto de: Spotify Familiar._
+    _Paga y sigue disfrutando de tu música favorita_
+    _Notificación automática creada por: Afemos_`;
     
     const text = encodeURIComponent(message);
     window.open(`https://wa.me/?text=${text}`, '_blank');
