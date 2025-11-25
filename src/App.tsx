@@ -235,10 +235,9 @@ export default function SpotifyTracker() {
   }
 
   return (
-    // CORRECCIÓN: Añadido 'relative' aquí para que el botón flotante se quede dentro de la app
-    <div className="max-w-md mx-auto h-screen flex flex-col bg-gray-50 font-sans relative">
+    <div className="max-w-md mx-auto h-screen flex flex-col bg-gray-50 font-sans relative overflow-hidden">
       {/* Header */}
-      <header className="bg-gray-900 text-white p-4 pt-6 shadow-lg z-10 flex justify-between items-center">
+      <header className="bg-gray-900 text-white p-4 pt-6 shadow-lg z-10 flex justify-between items-center shrink-0">
         <div className="w-6"></div>
         <h1 className="text-xl font-bold flex items-center gap-2">
            <span className="bg-green-500 p-1 rounded-full"><DollarSign className="w-4 h-4 text-white" /></span>
@@ -290,7 +289,7 @@ export default function SpotifyTracker() {
 
         {/* VISTA 2: PAGOS */}
         {activeTab === 1 && (
-          <div className="space-y-6 animate-in fade-in duration-300 pb-20">
+          <div className="space-y-6 animate-in fade-in duration-300 pb-24">
             <div className="flex justify-between items-center bg-white p-3 rounded-lg shadow-sm border border-gray-100">
               <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-green-50 rounded-full text-green-700 transition-colors"><ChevronLeft className="w-6 h-6" /></button>
               <h2 className="text-xl font-bold text-gray-800 capitalize flex items-center gap-2"><Calendar className="w-5 h-5 text-green-600" /> {monthName}</h2>
@@ -385,9 +384,9 @@ export default function SpotifyTracker() {
         )}
       </main>
 
-      {/* BOTÓN FLOTANTE DE WHATSAPP (AQUÍ ESTÁ LA CORRECCIÓN: Fuera del scroll, dentro del relative) */}
+      {/* BOTÓN FLOTANTE DE WHATSAPP (AHORA SÍ ESTÁ FUERA DEL MAIN SCROLL) */}
       {activeTab === 1 && (
-        <div className="absolute bottom-28 right-4 z-50">
+        <div className="absolute bottom-24 right-4 z-50">
             {showWhatsAppConfirm ? (
               <div className="bg-white p-4 rounded-2xl shadow-2xl border border-green-200 flex flex-col gap-3 w-64 animate-in slide-in-from-bottom-5 mb-4">
                 <div className="text-gray-800 font-medium">
@@ -407,14 +406,14 @@ export default function SpotifyTracker() {
                 className="bg-green-600 hover:bg-green-500 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-110 flex items-center gap-2 font-bold border-4 border-white"
               >
                 <MessageCircle className="w-6 h-6" />
-                <span>Enviar Aviso</span> {/* CORRECCIÓN: Texto siempre visible */}
+                <span>Enviar Aviso</span>
               </button>
             )}
         </div>
       )}
 
       {/* Tabs Inferiores */}
-      <nav className="bg-white border-t border-gray-200 flex justify-around p-2 pb-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20">
+      <nav className="bg-white border-t border-gray-200 flex justify-around p-2 pb-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20 shrink-0">
         <button onClick={() => setActiveTab(0)} className={`flex flex-col items-center p-2 rounded-xl w-20 transition-all duration-300 ${activeTab === 0 ? 'text-green-600 bg-green-50 translate-y-[-4px]' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}><Users className={`w-6 h-6 mb-1 ${activeTab === 0 ? 'fill-current' : ''}`} /><span className="text-[10px] font-bold uppercase tracking-wide">Gestión</span></button>
         <button onClick={() => setActiveTab(1)} className={`flex flex-col items-center p-2 rounded-xl w-20 transition-all duration-300 ${activeTab === 1 ? 'text-green-600 bg-green-50 shadow-sm translate-y-[-8px] scale-110' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}><DollarSign className="w-7 h-7 mb-0.5" strokeWidth={activeTab === 1 ? 3 : 2} /><span className="text-[10px] font-bold uppercase tracking-wide">Pagos</span></button>
         <button onClick={() => setActiveTab(2)} className={`flex flex-col items-center p-2 rounded-xl w-20 transition-all duration-300 ${activeTab === 2 ? 'text-green-600 bg-green-50 translate-y-[-4px]' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}><List className="w-6 h-6 mb-1" strokeWidth={activeTab === 2 ? 3 : 2} /><span className="text-[10px] font-bold uppercase tracking-wide">Historial</span></button>
