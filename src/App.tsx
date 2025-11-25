@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Trash2, UserPlus, RotateCcw, Check, Users, DollarSign, List, Calendar, AlertCircle, ChevronDown, ChevronLeft, ChevronRight, Cloud, CloudOff } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import type { User } from 'firebase/auth'; // CORRECCIÓN 1: Importación de tipo explícita
 import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 
 // --- CONFIGURACIÓN DE FIREBASE ---
-const myRealFirebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyAqdGa3XsyJfT9ZuG060yK0A8RK-nJljxQ",
   authDomain: "spotify-control-familia.firebaseapp.com",
   projectId: "spotify-control-familia",
@@ -15,42 +16,56 @@ const myRealFirebaseConfig = {
   measurementId: "G-C1G10LLCHS"
 };
 
-const isRunningInChat = typeof __firebase_config !== 'undefined';
-const firebaseConfig = isRunningInChat ? JSON.parse(__firebase_config) : myRealFirebaseConfig;
-
+// Inicializar Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const appId = isRunningInChat 
-  ? (typeof __app_id !== 'undefined' ? __app_id : 'default') 
-  : 'mi-grupo-familiar-spotify'; 
+// ID fijo para el grupo
+const APP_ID = 'mi-grupo-familiar-spotify'; 
+
+// --- TIPOS DE DATOS ---
+interface Member {
+  id: string;
+  name: string;
+  createdAt: number;
+}
+
+interface PaymentData {
+  date: string;
+  name: string;
+}
+
+interface ReportRow {
+  id: string;
+  key: string;
+  name: string;
+  isPaid: boolean;
+  date: string | null;
+  isExMember: boolean;
+}
 
 export default function SpotifyTracker() {
   // --- ESTADOS ---
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState(1);
-  const [members, setMembers] = useState([]);
-  const [payments, setPayments] = useState({});
+  const [members, setMembers] = useState<Member[]>([]);
+  const [payments, setPayments] = useState<Record<string, PaymentData>>({});
   const [newMemberName, setNewMemberName] = useState('');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showMonthGrid, setShowMonthGrid] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Estados visuales para confirmaciones
-  const [memberToDelete, setMemberToDelete] = useState(null);
-  const [paymentToUndo, setPaymentToUndo] = useState(null);
-  const [historicalToDelete, setHistoricalToDelete] = useState(null);
+  // Estados visuales
+  const [memberToDelete, setMemberToDelete] = useState<string | null>(null);
+  const [paymentToUndo, setPaymentToUndo] = useState<string | null>(null);
+  const [historicalToDelete, setHistoricalToDelete] = useState<string | null>(null);
 
   // --- EFECTO 1: AUTENTICACIÓN ---
   useEffect(() => {
     const initAuth = async () => {
       try {
-        if (isRunningInChat && typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
-        }
+        await signInAnonymously(auth);
       } catch (error) {
         console.error("Error de autenticación:", error);
       }
@@ -67,22 +82,22 @@ export default function SpotifyTracker() {
   useEffect(() => {
     if (!user) return;
 
-    const membersRef = collection(db, 'artifacts', appId, 'public', 'data', 'spotify_members');
-    const paymentsRef = collection(db, 'artifacts', appId, 'public', 'data', 'spotify_payments');
+    const membersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'spotify_members');
+    const paymentsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'spotify_payments');
 
     const unsubscribeMembers = onSnapshot(membersRef, (snapshot) => {
       const loadedMembers = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      }));
+      })) as Member[];
       setMembers(loadedMembers.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)));
       setIsLoading(false);
     }, (error) => console.error("Error cargando miembros:", error));
 
     const unsubscribePayments = onSnapshot(paymentsRef, (snapshot) => {
-      const loadedPayments = {};
+      const loadedPayments: Record<string, PaymentData> = {};
       snapshot.docs.forEach(doc => {
-        loadedPayments[doc.id] = doc.data();
+        loadedPayments[doc.id] = doc.data() as PaymentData;
       });
       setPayments(loadedPayments);
     }, (error) => console.error("Error cargando pagos:", error));
@@ -95,7 +110,7 @@ export default function SpotifyTracker() {
 
   // --- FUNCIONES ---
 
-  const getPaymentKey = (memberId) => {
+  const getPaymentKey = (memberId: string) => {
     const month = currentDate.getMonth() + 1;
     const year = currentDate.getFullYear();
     return `${memberId}_${year}-${month}`;
@@ -111,7 +126,7 @@ export default function SpotifyTracker() {
     };
 
     try {
-      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'spotify_members', newId);
+      const docRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'spotify_members', newId);
       await setDoc(docRef, newMember);
       setNewMemberName('');
     } catch (e) {
@@ -120,9 +135,9 @@ export default function SpotifyTracker() {
     }
   };
 
-  const confirmRemoveMember = async (id) => {
+  const confirmRemoveMember = async (id: string) => {
     try {
-      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'spotify_members', id);
+      const docRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'spotify_members', id);
       await deleteDoc(docRef);
       setMemberToDelete(null);
     } catch (e) {
@@ -130,12 +145,12 @@ export default function SpotifyTracker() {
     }
   };
 
-  const markAsPaid = async (member) => {
+  const markAsPaid = async (member: Member) => {
     if (!user) return;
     const key = getPaymentKey(member.id);
     
     try {
-      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'spotify_payments', key);
+      const docRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'spotify_payments', key);
       await setDoc(docRef, {
         date: new Date().toISOString(),
         name: member.name
@@ -145,10 +160,10 @@ export default function SpotifyTracker() {
     }
   };
 
-  const confirmUndoPayment = async (memberId) => {
+  const confirmUndoPayment = async (memberId: string) => {
     const key = getPaymentKey(memberId);
     try {
-      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'spotify_payments', key);
+      const docRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'spotify_payments', key);
       await deleteDoc(docRef);
       setPaymentToUndo(null);
     } catch (e) {
@@ -156,9 +171,9 @@ export default function SpotifyTracker() {
     }
   };
   
-  const confirmDeleteHistorical = async (key) => {
+  const confirmDeleteHistorical = async (key: string) => {
     try {
-      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'spotify_payments', key);
+      const docRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'spotify_payments', key);
       await deleteDoc(docRef);
       setHistoricalToDelete(null);
     } catch (e) {
@@ -168,7 +183,7 @@ export default function SpotifyTracker() {
 
   // --- HELPERS VISUALES ---
 
-  const formatDateTime = (isoString) => {
+  const formatDateTime = (isoString: string | undefined | null) => {
     if (!isoString) return '-';
     const date = new Date(isoString);
     return date.toLocaleString('es-ES', { 
@@ -179,13 +194,13 @@ export default function SpotifyTracker() {
     });
   };
 
-  const changeMonth = (offset) => {
+  const changeMonth = (offset: number) => {
     const newDate = new Date(currentDate);
     newDate.setMonth(newDate.getMonth() + offset);
     setCurrentDate(newDate);
   };
 
-  const selectSpecificMonth = (monthIndex) => {
+  const selectSpecificMonth = (monthIndex: number) => {
     const newDate = new Date(currentDate);
     newDate.setMonth(monthIndex);
     setCurrentDate(newDate);
@@ -199,13 +214,13 @@ export default function SpotifyTracker() {
   ];
 
   // --- LÓGICA DE REPORTES ---
-  const getReportData = () => {
+  const getReportData = (): ReportRow[] => {
     const month = currentDate.getMonth() + 1;
     const year = currentDate.getFullYear();
     const suffix = `_${year}-${month}`;
     
-    const rows = [];
-    const processedIds = new Set();
+    const rows: ReportRow[] = [];
+    const processedIds = new Set<string>();
 
     Object.keys(payments).forEach(key => {
       if (key.endsWith(suffix)) {
@@ -505,7 +520,7 @@ export default function SpotifyTracker() {
                           )}
                         </td>
                         <td className="p-3 text-xs text-gray-500 text-right font-mono">{formatDateTime(row.date)}</td>
-                        <td className="p-3 text-right relative"> {/* AÑADIDO "relative" AQUÍ */}
+                        <td className="p-3 text-right relative"> {/* CORRECCIÓN 2: colSpan numérico */}
                           {/* Botón de Borrar Historial con Confirmación Visual */}
                           {row.isPaid && (
                             historicalToDelete === row.key ? (
@@ -538,7 +553,7 @@ export default function SpotifyTracker() {
                     ))}
                      {reportData.length === 0 && (
                         <tr>
-                          <td colSpan="4" className="p-10 text-center">
+                          <td colSpan={4} className="p-10 text-center"> {/* CORRECCIÓN 2: Aquí estaba "4", ahora es {4} */}
                             <List className="w-8 h-8 text-gray-200 mx-auto mb-2" />
                             <p className="text-gray-400 text-sm">Sin datos para este mes</p>
                           </td>
