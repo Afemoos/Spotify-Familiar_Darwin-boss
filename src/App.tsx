@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Trash2, UserPlus, RotateCcw, Check, Users, DollarSign, List, Calendar, AlertCircle, ChevronDown, ChevronLeft, ChevronRight, Cloud, CloudOff, MessageCircle, Send } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
-// CORRECCIÓN AQUÍ: Se eliminó 'User' de esta línea para no duplicarlo
 import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import type { User } from 'firebase/auth'; 
 import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
