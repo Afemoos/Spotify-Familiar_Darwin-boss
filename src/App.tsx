@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { Trash2, UserPlus, RotateCcw, Check, Users, DollarSign, List, Calendar, AlertCircle, ChevronDown, ChevronLeft, ChevronRight, Cloud, CloudOff } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
-import type { User } from 'firebase/auth'; // CORRECCIÓN 1: Importación de tipo explícita
+import type { User } from 'firebase/auth'; // Importación de tipo explícita para evitar errores de TS
 import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 
 // --- CONFIGURACIÓN DE FIREBASE ---
+// Asegúrate de que estos valores sean correctos y correspondan a tu proyecto en Firebase Console
 const firebaseConfig = {
   apiKey: "AIzaSyAqdGa3XsyJfT9ZuG060yK0A8RK-nJljxQ",
   authDomain: "spotify-control-familia.firebaseapp.com",
@@ -24,7 +25,7 @@ const db = getFirestore(app);
 // ID fijo para el grupo
 const APP_ID = 'mi-grupo-familiar-spotify'; 
 
-// --- TIPOS DE DATOS ---
+// --- TIPOS DE DATOS (Interfaces para TypeScript) ---
 interface Member {
   id: string;
   name: string;
@@ -56,7 +57,7 @@ export default function SpotifyTracker() {
   const [showMonthGrid, setShowMonthGrid] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Estados visuales
+  // Estados visuales para confirmaciones
   const [memberToDelete, setMemberToDelete] = useState<string | null>(null);
   const [paymentToUndo, setPaymentToUndo] = useState<string | null>(null);
   const [historicalToDelete, setHistoricalToDelete] = useState<string | null>(null);
@@ -520,7 +521,7 @@ export default function SpotifyTracker() {
                           )}
                         </td>
                         <td className="p-3 text-xs text-gray-500 text-right font-mono">{formatDateTime(row.date)}</td>
-                        <td className="p-3 text-right relative"> {/* CORRECCIÓN 2: colSpan numérico */}
+                        <td className="p-3 text-right relative">
                           {/* Botón de Borrar Historial con Confirmación Visual */}
                           {row.isPaid && (
                             historicalToDelete === row.key ? (
@@ -553,7 +554,7 @@ export default function SpotifyTracker() {
                     ))}
                      {reportData.length === 0 && (
                         <tr>
-                          <td colSpan={4} className="p-10 text-center"> {/* CORRECCIÓN 2: Aquí estaba "4", ahora es {4} */}
+                          <td colSpan={4} className="p-10 text-center">
                             <List className="w-8 h-8 text-gray-200 mx-auto mb-2" />
                             <p className="text-gray-400 text-sm">Sin datos para este mes</p>
                           </td>
