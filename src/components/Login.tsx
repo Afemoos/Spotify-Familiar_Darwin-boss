@@ -48,12 +48,12 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onGuestLogin, memb
         if (isPaid) {
             setModalConfig({
                 type: 'success',
-                message: 'Felicitaciones, estas al dia con tu obligacion'
+                message: 'Felicitaciones, estás al día con tu obligación'
             });
         } else {
             setModalConfig({
                 type: 'warning',
-                message: 'OJO, Parece que sos un malapaga. Ten cautela o seras reportado ante las centrales de riesgo'
+                message: '¡OJO! Parece que sos mala paga. Ten cuidado o serás reportado ante las centrales de riesgo.'
             });
         }
     };
@@ -70,7 +70,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onGuestLogin, memb
                     <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
                         <AlertCircle className="w-8 h-8 text-red-500" />
                     </div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Acceso Denegado</h2>
+                    <h2 className="text-2xl font-bold text-white mb-2">Acceso denegado</h2>
                     <p className="text-gray-300 mb-8">
                         Lo sentimos, pero parece que no tienes acceso. Por favor verifica tus credenciales.
                     </p>

@@ -10,8 +10,8 @@ export function WhatsAppButton({ className = "absolute bottom-24 right-4" }: Wha
 
     const sendWhatsAppNotice = () => {
         const message = `🚨⚠️
-    _Bueno, que, no van a pagar o que?_
-    _Actualmente te encuentras en mora del pago por concepto de: Spotify Familiar._
+    _Bueno, ¿qué? ¿No van a pagar o qué?_
+    _Actualmente estás en mora del pago por concepto de: Spotify Familiar._
     _Paga y sigue disfrutando de tu música favorita_
     _Notificación automática creada por: Afemos_`;
 
@@ -27,7 +27,7 @@ export function WhatsAppButton({ className = "absolute bottom-24 right-4" }: Wha
                     <div className="text-white font-medium">
                         <p>¿Enviar recordatorio?</p>
                         <p className="text-xs text-gray-300 italic mt-1 whitespace-pre-line">
-                            "🚨⚠️ Bueno, que, no van a pagar..."
+                            "🚨⚠️ Bueno, ¿qué? ¿No van a pagar..."
                         </p>
                     </div>
                     <div className="flex gap-2">
@@ -43,7 +43,7 @@ export function WhatsAppButton({ className = "absolute bottom-24 right-4" }: Wha
                     className="bg-green-600 hover:bg-green-500 text-white p-4 rounded-full shadow-lg hover:shadow-green-500/30 transition-all transform hover:scale-110 flex items-center gap-2 font-bold border-4 border-gray-900"
                 >
                     <MessageCircle className="w-6 h-6" />
-                    <span>Enviar Aviso</span>
+                    <span>Enviar aviso</span>
                 </button>
             )}
         </div>

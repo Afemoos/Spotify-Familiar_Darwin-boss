@@ -69,14 +69,14 @@ export function DesktopLayout({
                         className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${activeTab === 1 ? 'bg-green-600/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'}`}
                     >
                         <DollarSign className="w-5 h-5" />
-                        <span className="font-medium">Pagos del Mes</span>
+                        <span className="font-medium">Pagos del mes</span>
                     </button>
                     <button
                         onClick={() => setActiveTab(2)}
                         className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${activeTab === 2 ? 'bg-green-600/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'}`}
                     >
                         <List className="w-5 h-5" />
-                        <span className="font-medium">Historial de Pagos</span>
+                        <span className="font-medium">Historial de pagos</span>
                     </button>
                 </nav>
 
@@ -125,7 +125,7 @@ export function DesktopLayout({
                                             </h3>
                                             <div className="space-y-4">
                                                 <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
-                                                    <span className="text-gray-400">Total Miembros</span>
+                                                    <span className="text-gray-400">Total miembros</span>
                                                     <span className="font-bold text-white text-xl">{members.length}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center p-3 bg-green-500/10 rounded-lg border border-green-500/20">

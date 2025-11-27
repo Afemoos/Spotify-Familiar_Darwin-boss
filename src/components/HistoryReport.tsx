@@ -16,13 +16,13 @@ export function HistoryReport({ members, payments, currentDate, onChangeMonth, o
     const [showMonthGrid, setShowMonthGrid] = useState(false);
     const [historicalToDelete, setHistoricalToDelete] = useState<string | null>(null);
 
-    const monthName = currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+    const monthName = currentDate.toLocaleString('es-CO', { month: 'long', year: 'numeric' });
     const monthNamesList = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
     const formatDateTime = (isoString: string | undefined | null) => {
         if (!isoString) return '-';
         const date = new Date(isoString);
-        return date.toLocaleString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+        return date.toLocaleString('es-CO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
     };
 
     const getPaymentKey = (memberId: string) => {
@@ -46,7 +46,7 @@ export function HistoryReport({ members, payments, currentDate, onChangeMonth, o
                 const date = paymentData?.date;
                 const savedName = paymentData?.name;
                 const currentMember = members.find(m => m.id === memberId);
-                const displayName = savedName || (currentMember ? currentMember.name : 'Ex-Miembro');
+                const displayName = savedName || (currentMember ? currentMember.name : 'Exmiembro');
                 rows.push({ id: memberId, key: key, name: displayName, isPaid: true, date: date, isExMember: !currentMember });
                 processedIds.add(memberId);
             }

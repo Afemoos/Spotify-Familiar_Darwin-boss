@@ -15,7 +15,7 @@ interface PaymentListProps {
 export function PaymentList({ members, payments, currentDate, onChangeMonth, onMarkAsPaid, onUndoPayment, isGuest = false }: PaymentListProps) {
     const [paymentToUndo, setPaymentToUndo] = useState<string | null>(null);
 
-    const monthName = currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+    const monthName = currentDate.toLocaleString('es-CO', { month: 'long', year: 'numeric' });
 
     const getPaymentKey = (memberId: string) => {
         const month = currentDate.getMonth() + 1;
