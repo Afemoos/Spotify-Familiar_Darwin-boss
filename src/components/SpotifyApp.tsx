@@ -5,7 +5,11 @@ import { MobileLayout } from './MobileLayout';
 import { DesktopLayout } from './DesktopLayout';
 import { useIsMobile } from '../hooks/useIsMobile';
 
-export function SpotifyApp() {
+interface SpotifyAppProps {
+    onBackToHub: () => void;
+}
+
+export function SpotifyApp({ onBackToHub }: SpotifyAppProps) {
     const { user, members, payments, isLoading, addMember, removeMember, markAsPaid, undoPayment, deleteHistorical } = useSpotifyData();
     const [activeTab, setActiveTab] = useState(1);
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -47,6 +51,7 @@ export function SpotifyApp() {
             <Login
                 onLoginSuccess={handleLoginSuccess}
                 onGuestLogin={handleGuestLogin}
+                onBackToHub={onBackToHub}
                 members={members}
                 payments={payments}
             />

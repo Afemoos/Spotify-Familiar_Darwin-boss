@@ -1,5 +1,7 @@
 
 
+import { apps } from '../config/apps';
+
 interface HubProps {
     onSelectApp: (appId: string) => void;
 }
@@ -18,26 +20,28 @@ export function Hub({ onSelectApp }: HubProps) {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {/* Spotify App Card */}
-                    <button
-                        onClick={() => onSelectApp('spotify')}
-                        className="group relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 transition-all duration-300 hover:bg-white/10 hover:scale-105 hover:shadow-2xl hover:shadow-green-500/20 text-left flex flex-col gap-6 animate-in zoom-in-95 duration-500 delay-100"
-                    >
-                        <div className="w-20 h-20 rounded-2xl overflow-hidden border border-green-500/30 group-hover:border-green-500/50 transition-all shadow-lg shadow-black/50">
-                            <img
-                                src="/spotify-icon.jpg"
-                                alt="Spotify Familiar"
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                            />
-                        </div>
-                        <div>
-                            <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-green-400 transition-colors">Spotify Familiar</h3>
-                            <p className="text-gray-400 text-sm leading-relaxed">
-                                Gestión de pagos y miembros del plan familiar de Spotify.
-                            </p>
-                        </div>
-                        <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-green-500/0 to-green-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </button>
+                    {apps.map((app) => (
+                        <button
+                            key={app.id}
+                            onClick={() => onSelectApp(app.id)}
+                            className="group relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 transition-all duration-300 hover:bg-white/10 hover:scale-105 hover:shadow-2xl hover:shadow-green-500/20 text-left flex flex-col gap-6 animate-in zoom-in-95 duration-500 delay-100"
+                        >
+                            <div className="w-20 h-20 rounded-2xl overflow-hidden border border-green-500/30 group-hover:border-green-500/50 transition-all shadow-lg shadow-black/50">
+                                <img
+                                    src={app.icon}
+                                    alt={app.name}
+                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                />
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-green-400 transition-colors">{app.name}</h3>
+                                <p className="text-gray-400 text-sm leading-relaxed">
+                                    {app.description}
+                                </p>
+                            </div>
+                            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-green-500/0 to-green-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </button>
+                    ))}
 
                     {/* Placeholder for future apps */}
                     <div className="bg-white/5 backdrop-blur-sm border border-white/5 rounded-3xl p-8 flex flex-col items-center justify-center gap-4 opacity-50 border-dashed">

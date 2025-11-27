@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Lock, User, ArrowRight, AlertCircle, UserCheck, X, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Eye, EyeOff, Lock, User, ArrowRight, AlertCircle, UserCheck, X, CheckCircle, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { Member, PaymentData } from '../types';
 
 interface LoginProps {
     onLoginSuccess: () => void;
     onGuestLogin: () => void;
-    members: Member[];
-    payments: Record<string, PaymentData>;
+    onBackToHub?: () => void;
 }
 
-export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onGuestLogin, members, payments }) => {
+export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onGuestLogin, members, payments, onBackToHub }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -144,12 +143,32 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onGuestLogin, memb
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800 p-4">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800 p-4 relative">
+            <button
+                onClick={onBackToHub}
+                className="absolute top-6 left-6 text-gray-400 hover:text-white flex items-center gap-2 transition-colors group"
+            >
+                <div className="p-2 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors">
+                    <ArrowLeft className="w-5 h-5" />
+                </div>
+                <span className="font-medium">Volver al inicio</span>
+            </button>
+
             <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-full max-w-md shadow-2xl border border-white/20">
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold text-white mb-2">Bienvenido</h1>
+                    <h1 className="text-3xl font-bold text-white mb-2">Bienvenido</h1>
                     <p className="text-gray-400">Ingresa tus credenciales para continuar</p>
                 </div>
+
+                {onBackToHub && (
+                    <button
+                        onClick={onBackToHub}
+                        className="absolute top-4 left-4 text-gray-400 hover:text-white transition-colors flex items-center gap-1"
+                    >
+                        <ArrowRight className="w-4 h-4 rotate-180" /> Volver
+                    </button>
+                )}
 
                 <form onSubmit={handleLogin} className="space-y-6">
                     <div className="space-y-2">

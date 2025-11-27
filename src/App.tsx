@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import { Hub } from './components/Hub';
-import { SpotifyApp } from './components/SpotifyApp';
+import { apps } from './config/apps';
 
 export default function App() {
-  const [selectedApp, setSelectedApp] = useState<string | null>(null);
+  const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
 
-  if (!selectedApp) {
-    return <Hub onSelectApp={setSelectedApp} />;
+  if (!selectedAppId) {
+    return <Hub onSelectApp={setSelectedAppId} />;
   }
 
-  if (selectedApp === 'spotify') {
-    return <SpotifyApp />;
+  const SelectedApp = apps.find(app => app.id === selectedAppId)?.component;
+
+  if (SelectedApp) {
+    return <SelectedApp onBackToHub={() => setSelectedAppId(null)} />;
   }
 
   return null;
