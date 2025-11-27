@@ -6,6 +6,8 @@ interface LoginProps {
     onLoginSuccess: () => void;
     onGuestLogin: () => void;
     onBackToHub?: () => void;
+    members: Member[];
+    payments: Record<string, PaymentData>;
 }
 
 export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onGuestLogin, members, payments, onBackToHub }) => {
