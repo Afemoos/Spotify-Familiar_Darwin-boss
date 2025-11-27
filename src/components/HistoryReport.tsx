@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, ChevronDown, ChevronLeft, ChevronRight, List, Trash2 } from 'lucide-react';
+import { Calendar, ChevronDown, ChevronLeft, ChevronRight, List, Trash2, Lock } from 'lucide-react';
 import { Member, PaymentData, ReportRow } from '../types';
 
 interface HistoryReportProps {
@@ -9,9 +9,10 @@ interface HistoryReportProps {
     onChangeMonth: (offset: number) => void;
     onSelectMonth: (monthIndex: number) => void;
     onDeleteHistorical: (key: string) => Promise<void>;
+    isGuest?: boolean;
 }
 
-export function HistoryReport({ members, payments, currentDate, onChangeMonth, onSelectMonth, onDeleteHistorical }: HistoryReportProps) {
+export function HistoryReport({ members, payments, currentDate, onChangeMonth, onSelectMonth, onDeleteHistorical, isGuest = false }: HistoryReportProps) {
     const [showMonthGrid, setShowMonthGrid] = useState(false);
     const [historicalToDelete, setHistoricalToDelete] = useState<string | null>(null);
 
@@ -91,6 +92,13 @@ export function HistoryReport({ members, payments, currentDate, onChangeMonth, o
                 )}
             </div>
 
+            {isGuest && (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center gap-3 text-blue-800 animate-in fade-in slide-in-from-top-2">
+                    <Lock className="w-5 h-5 shrink-0" />
+                    <p className="text-sm font-medium">Estás en modo visitante. Solo puedes ver la información.</p>
+                </div>
+            )}
+
             {!showMonthGrid && (
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 animate-in fade-in duration-300">
                     <table className="w-full text-left">
@@ -111,7 +119,7 @@ export function HistoryReport({ members, payments, currentDate, onChangeMonth, o
                                     <td className="p-3">{row.isPaid ? <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">Pagado</span> : <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-red-50 text-red-600 border border-red-100">Pendiente</span>}</td>
                                     <td className="p-3 text-xs text-gray-500 text-right font-mono">{formatDateTime(row.date)}</td>
                                     <td className="p-3 text-right relative">
-                                        {row.isPaid && (historicalToDelete === row.key ? (<div className="flex gap-1 absolute right-2 top-1/2 transform -translate-y-1/2 bg-white shadow-lg rounded-md border border-red-100 p-1 animate-in slide-in-from-right-5 z-20"><button onClick={() => setHistoricalToDelete(null)} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded hover:bg-gray-200">No</button><button onClick={() => handleDelete(row.key)} className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600">Sí</button></div>) : (<button onClick={() => setHistoricalToDelete(row.key)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-1.5 rounded transition-all" title="Borrar registro permanentemente"><Trash2 className="w-4 h-4" /></button>))}
+                                        {row.isPaid && !isGuest && (historicalToDelete === row.key ? (<div className="flex gap-1 absolute right-2 top-1/2 transform -translate-y-1/2 bg-white shadow-lg rounded-md border border-red-100 p-1 animate-in slide-in-from-right-5 z-20"><button onClick={() => setHistoricalToDelete(null)} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded hover:bg-gray-200">No</button><button onClick={() => handleDelete(row.key)} className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600">Sí</button></div>) : (<button onClick={() => setHistoricalToDelete(row.key)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-1.5 rounded transition-all" title="Borrar registro permanentemente"><Trash2 className="w-4 h-4" /></button>))}
                                     </td>
                                 </tr>
                             ))}
