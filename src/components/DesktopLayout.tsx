@@ -153,31 +153,28 @@ export function DesktopLayout({
                                             </div>
                                         </div>
                                     </div>
-                                    </div>
-                        )}
-                    </div>
+                                )}
+                            </div>
                         )}
 
-                    {activeTab === 2 && (
-                        <HistoryReport
-                            members={members}
-                            payments={payments}
-                            currentDate={currentDate}
-                            onChangeMonth={changeMonth}
-                            onSelectMonth={selectSpecificMonth}
-                            onDeleteHistorical={deleteHistorical}
-                            isGuest={isGuest}
-                        />
-                    )}
+                        {activeTab === 2 && (
+                            <HistoryReport
+                                members={members}
+                                payments={payments}
+                                currentDate={currentDate}
+                                onChangeMonth={changeMonth}
+                                onSelectMonth={selectSpecificMonth}
+                                onDeleteHistorical={deleteHistorical}
+                                isGuest={isGuest}
+                            />
+                        )}
+                    </div>
                 </div>
+
+                {!isGuest && activeTab === 1 && (
+                    <WhatsAppButton className="absolute bottom-8 right-8" />
+                )}
+            </main>
         </div>
-                
-                {
-        !isGuest && activeTab === 1 && (
-            <WhatsAppButton className="absolute bottom-8 right-8" />
-        )
-    }
-            </main >
-        </div >
     );
 }
