@@ -36,32 +36,53 @@ export default function SpotifyTracker() {
     setActiveTab(1); // Default to Payments tab for guests
   };
 
-  <p className="font-medium animate-pulse">Cargando...</p>
-      </div >
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setIsGuest(false);
+    setActiveTab(1);
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <Login
+        onLoginSuccess={handleLoginSuccess}
+        onGuestLogin={handleGuestLogin}
+        members={members}
+        payments={payments}
+      />
     );
-}
+  }
 
-const commonProps = {
-  user,
-  members,
-  payments,
-  activeTab,
-  setActiveTab,
-  currentDate,
-  changeMonth,
-  selectSpecificMonth,
-  addMember,
-  removeMember,
-  markAsPaid,
-  undoPayment,
-  deleteHistorical,
-  isGuest,
-  onLogout: handleLogout
-};
+  if (isLoading && !user) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gray-900 text-green-500 flex-col gap-3">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+        <p className="font-medium animate-pulse">Cargando...</p>
+      </div>
+    );
+  }
 
-return isMobile ? (
-  <MobileLayout {...commonProps} />
-) : (
-  <DesktopLayout {...commonProps} />
-);
+  const commonProps = {
+    user,
+    members,
+    payments,
+    activeTab,
+    setActiveTab,
+    currentDate,
+    changeMonth,
+    selectSpecificMonth,
+    addMember,
+    removeMember,
+    markAsPaid,
+    undoPayment,
+    deleteHistorical,
+    isGuest,
+    onLogout: handleLogout
+  };
+
+  return isMobile ? (
+    <MobileLayout {...commonProps} />
+  ) : (
+    <DesktopLayout {...commonProps} />
+  );
 }
