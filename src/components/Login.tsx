@@ -26,7 +26,7 @@ export function Login({ onLoginSuccess, onGuestLogin, onBackToHub, members, paym
 
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
-        if (username === 'admin' && password === 'admin123') {
+        if (username === 'Darwin47' && password === 'Darwin47') {
             onLoginSuccess();
         } else {
             setError('Credenciales incorrectas');
