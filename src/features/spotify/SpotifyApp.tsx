@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ADMIN_CONFIG } from '../../config/admin';
 import { useSpotifyData } from '../../hooks/useSpotifyData';
 import { useAuth } from '../../context/AuthContext';
 import { useGroups } from '../../context/GroupContext';
@@ -20,7 +21,7 @@ export function SpotifyApp({ onBackToHub }: SpotifyAppProps) {
 
     // Role determination
     const isAdmin = globalUser && (
-        globalUser.email === 'darwin47@elprivado.app'
+        globalUser.email === ADMIN_CONFIG.email
     );
 
     const role: 'admin' | 'member' | 'visitor' = isAdmin ? 'admin' : (globalUser ? 'member' : 'visitor');
