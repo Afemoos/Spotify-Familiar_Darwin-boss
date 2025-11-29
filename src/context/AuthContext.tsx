@@ -112,6 +112,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setError(null);
         try {
             await signOut(auth);
+            setUser(null); // Explicitly clear user state for bypass users
         } catch (err) {
             console.error("Logout error:", err);
             setError("Error al cerrar sesión");
