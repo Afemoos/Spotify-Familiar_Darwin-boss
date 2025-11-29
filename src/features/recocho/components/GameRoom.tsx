@@ -4,23 +4,30 @@ import { RecochoGame } from '../types';
 
 interface GameRoomProps {
     game: RecochoGame;
-    onAddPlayer: (name: string, team: 'A' | 'B', phoneNumber?: string, status?: 'confirmed' | 'suggested') => Promise<void>;
+    onAddPlayer: (name: string, team: 'A' | 'B', phoneNumber?: string, status?: 'confirmed' | 'suggested', level?: number) => Promise<void>;
     onRemovePlayer: (playerId: string) => Promise<void>;
+    onUpdatePlayerStatus: (playerId: string, status: 'confirmed' | 'suggested', level?: number) => Promise<void>;
     onUpdatePrice: (price: number) => Promise<void>;
     onDelete: () => Promise<void>;
     onLeave: () => void;
     isOwner: boolean;
 }
 
-export function GameRoom({ game, onAddPlayer, onRemovePlayer, onUpdatePrice, onDelete, onLeave, isOwner }: GameRoomProps) {
+export function GameRoom({ game, onAddPlayer, onRemovePlayer, onUpdatePlayerStatus, onUpdatePrice, onDelete, onLeave, isOwner }: GameRoomProps) {
     const [newPlayerName, setNewPlayerName] = useState('');
     const [phoneNumber, setPhoneNumber] = useState(''); // For guests
+    const [playerLevel, setPlayerLevel] = useState<number>(5); // Default level
     const [selectedTeam, setSelectedTeam] = useState<'A' | 'B'>('A');
     const [isEditingPrice, setIsEditingPrice] = useState(false);
     const [tempPrice, setTempPrice] = useState(game.pitchPrice.toString());
 
+    // State for editing suggested player level
+    const [editingLevelId, setEditingLevelId] = useState<string | null>(null);
+    const [tempLevel, setTempLevel] = useState<number>(5);
+
     const teamA = game.players.filter(p => p.team === 'A');
     const teamB = game.players.filter(p => p.team === 'B');
+    const suggestedPlayers = game.players.filter(p => p.status === 'suggested');
 
     const pricePerTeam = game.pitchPrice / 2;
     const pricePerPlayerA = teamA.length > 0 ? pricePerTeam / teamA.length : 0;
@@ -47,10 +54,12 @@ export function GameRoom({ game, onAddPlayer, onRemovePlayer, onUpdatePrice, onD
             newPlayerName,
             selectedTeam,
             isOwner ? undefined : phoneNumber,
-            isOwner ? 'confirmed' : 'suggested'
+            isOwner ? 'confirmed' : 'suggested',
+            isOwner ? playerLevel : undefined // Guests suggest level via ManageGames, here it's manual add
         );
         setNewPlayerName('');
         setPhoneNumber('');
+        setPlayerLevel(5);
     };
 
     const handlePriceUpdate = async () => {
@@ -67,6 +76,84 @@ export function GameRoom({ game, onAddPlayer, onRemovePlayer, onUpdatePrice, onD
 
     return (
         <div className="w-full max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-5 duration-500 pb-20">
+            {/* Notifications for Admin */}
+            {isOwner && suggestedPlayers.length > 0 && (
+                <div className="mb-8 bg-blue-500/10 border border-blue-500/20 rounded-3xl p-6 animate-in fade-in slide-in-from-top-5">
+                    <h3 className="text-xl font-bold text-blue-400 mb-4 flex items-center gap-2">
+                        <div className="relative">
+                            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+                            <Settings className="w-5 h-5" />
+                        </div>
+                        Solicitudes Pendientes ({suggestedPlayers.length})
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {suggestedPlayers.map(player => (
+                            <div key={player.id} className="bg-black/40 rounded-xl p-4 flex items-center justify-between border border-white/5">
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-bold text-white">{player.name}</span>
+                                        <span className={`text-xs px-2 py-0.5 rounded border ${player.team === 'A' ? 'bg-blue-500/20 border-blue-500/30 text-blue-300' : 'bg-red-500/20 border-red-500/30 text-red-300'}`}>
+                                            Equipo {player.team}
+                                        </span>
+                                    </div>
+                                    {player.phoneNumber && (
+                                        <p className="text-sm text-gray-400 mt-1 flex items-center gap-1">
+                                            📱 {player.phoneNumber}
+                                        </p>
+                                    )}
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <span className="text-xs text-gray-500 uppercase font-bold">Nivel:</span>
+                                        {editingLevelId === player.id ? (
+                                            <div className="flex items-center gap-1">
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    max="10"
+                                                    value={tempLevel}
+                                                    onChange={(e) => setTempLevel(parseInt(e.target.value))}
+                                                    className="w-12 bg-black/40 border border-white/20 rounded px-1 text-center text-sm"
+                                                />
+                                                <button onClick={() => setEditingLevelId(null)} className="text-xs text-blue-400">OK</button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => {
+                                                    setEditingLevelId(player.id);
+                                                    setTempLevel(player.level || 5);
+                                                }}
+                                                className="text-sm font-bold text-yellow-500 bg-yellow-500/10 px-2 rounded border border-yellow-500/20 hover:bg-yellow-500/20"
+                                            >
+                                                {player.level || '?'} ⭐
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => {
+                                            const finalLevel = editingLevelId === player.id ? tempLevel : (player.level || 5);
+                                            onUpdatePlayerStatus(player.id, 'confirmed', finalLevel);
+                                            setEditingLevelId(null);
+                                        }}
+                                        className="p-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg transition-colors"
+                                        title="Aceptar"
+                                    >
+                                        <Check className="w-5 h-5" />
+                                    </button>
+                                    <button
+                                        onClick={() => onRemovePlayer(player.id)}
+                                        className="p-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors"
+                                        title="Rechazar"
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {/* Header */}
             <div className="flex flex-col gap-6 mb-8 bg-white/5 p-4 md:p-6 rounded-3xl border border-white/10">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -82,6 +169,11 @@ export function GameRoom({ game, onAddPlayer, onRemovePlayer, onUpdatePrice, onD
                                     {game.code}
                                 </span>
                             </div>
+                            {game.location && (
+                                <div className="flex items-center gap-1 text-gray-400 text-sm mt-1">
+                                    <span>📍 {game.location}</span>
+                                </div>
+                            )}
                             {isOwner && (
                                 <div className="mt-2 flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
                                     <span className="text-red-400 text-xs uppercase tracking-widest font-bold flex items-center gap-1">
@@ -187,6 +279,11 @@ export function GameRoom({ game, onAddPlayer, onRemovePlayer, onUpdatePrice, onD
                                 <div className="flex flex-col">
                                     <div className="flex items-center gap-2">
                                         <span className="font-medium text-white">{player.name}</span>
+                                        {player.level && (
+                                            <span className="text-[10px] bg-yellow-500/20 text-yellow-300 px-1.5 py-0.5 rounded border border-yellow-500/30 font-bold">
+                                                ★ {player.level}
+                                            </span>
+                                        )}
                                         {player.status === 'suggested' && (
                                             <span className="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded border border-blue-500/30 uppercase tracking-wide">
                                                 Sugerido
@@ -245,6 +342,11 @@ export function GameRoom({ game, onAddPlayer, onRemovePlayer, onUpdatePrice, onD
                                 <div className="flex flex-col">
                                     <div className="flex items-center gap-2">
                                         <span className="font-medium text-white">{player.name}</span>
+                                        {player.level && (
+                                            <span className="text-[10px] bg-yellow-500/20 text-yellow-300 px-1.5 py-0.5 rounded border border-yellow-500/30 font-bold">
+                                                ★ {player.level}
+                                            </span>
+                                        )}
                                         {player.status === 'suggested' && (
                                             <span className="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded border border-blue-500/30 uppercase tracking-wide">
                                                 Sugerido
@@ -298,7 +400,26 @@ export function GameRoom({ game, onAddPlayer, onRemovePlayer, onUpdatePrice, onD
                         </button>
                     </div>
 
-                    {!isOwner && (
+                    {isOwner ? (
+                        <div className="flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2">
+                            <span className="text-sm text-gray-400">Nivel:</span>
+                            <div className="flex gap-1 overflow-x-auto pb-1">
+                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((lvl) => (
+                                    <button
+                                        key={lvl}
+                                        type="button"
+                                        onClick={() => setPlayerLevel(lvl)}
+                                        className={`w-8 h-8 rounded-lg text-sm font-bold flex-shrink-0 transition-all ${playerLevel === lvl
+                                            ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20 scale-105'
+                                            : 'bg-black/40 text-gray-400 hover:bg-white/10'
+                                            }`}
+                                    >
+                                        {lvl}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
                         <input
                             type="tel"
                             value={phoneNumber}

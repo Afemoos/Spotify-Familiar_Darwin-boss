@@ -6,6 +6,7 @@ export interface RecochoPlayer {
     addedAt: number;
     phoneNumber?: string;
     status: 'confirmed' | 'suggested';
+    level?: number; // 1-10
 }
 
 export interface RecochoGame {
@@ -13,6 +14,7 @@ export interface RecochoGame {
     code: string;
     adminCode: string;
     recoveryPin?: string; // Optional PIN for recovery
+    location?: string; // Optional location name
     createdAt: number;
     teamSize: number; // 5 to 11
     pitchPrice: number;
@@ -26,4 +28,5 @@ export interface CreateRecochoParams {
     pitchPrice: number;
     creatorName?: string; // For guest creators
     recoveryPin?: string;
+    location?: string;
 }

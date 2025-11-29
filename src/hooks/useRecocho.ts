@@ -128,6 +128,7 @@ export function useRecocho() {
                 code,
                 adminCode,
                 recoveryPin: params.recoveryPin,
+                location: params.location,
                 createdAt: Date.now(),
                 teamSize: params.teamSize,
                 pitchPrice: params.pitchPrice,
@@ -204,7 +205,7 @@ export function useRecocho() {
         }
     };
 
-    const addPlayer = async (gameId: string, name: string, team: 'A' | 'B', phoneNumber?: string, status: 'confirmed' | 'suggested' = 'confirmed') => {
+    const addPlayer = async (gameId: string, name: string, team: 'A' | 'B', phoneNumber?: string, status: 'confirmed' | 'suggested' = 'confirmed', level?: number) => {
         if (!currentGame) return;
 
         try {
@@ -215,7 +216,8 @@ export function useRecocho() {
                 team,
                 addedAt: Date.now(),
                 phoneNumber,
-                status
+                status,
+                level
             };
 
             const updatedPlayers = [...currentGame.players, newPlayer];
@@ -223,8 +225,25 @@ export function useRecocho() {
                 players: updatedPlayers
             });
         } catch (err) {
+
             console.error("Error adding player:", err);
             setError("No se pudo agregar el jugador");
+        }
+    };
+
+    const updatePlayerStatus = async (gameId: string, playerId: string, newStatus: 'confirmed' | 'suggested', level?: number) => {
+        if (!currentGame) return;
+
+        try {
+            const updatedPlayers = currentGame.players.map(p =>
+                p.id === playerId ? { ...p, status: newStatus, level: level !== undefined ? level : p.level } : p
+            );
+            await updateDoc(doc(db, 'recochos', gameId), {
+                players: updatedPlayers
+            });
+        } catch (err) {
+            console.error("Error updating player status:", err);
+            setError("No se pudo actualizar el estado del jugador");
         }
     };
 
@@ -274,6 +293,7 @@ export function useRecocho() {
         joinGame,
         addPlayer,
         removePlayer,
+        updatePlayerStatus,
         updatePitchPrice,
         deleteGame,
         setCurrentGame // Exposed to allow clearing current game

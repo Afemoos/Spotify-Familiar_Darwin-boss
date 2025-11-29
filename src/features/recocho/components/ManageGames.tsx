@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { ArrowLeft, Search, Play } from 'lucide-react';
+import { ArrowLeft, Play } from 'lucide-react';
 import { RecochoGame } from '../types';
 
 interface ManageGamesProps {
     activeGames: RecochoGame[];
     myGames: RecochoGame[];
-    onJoinGame: (code: string, name: string, phone: string) => Promise<boolean>;
+    onJoinGame: (code: string, name: string, phone: string, level?: number) => Promise<boolean>;
     onBack: () => void;
 }
 
@@ -14,24 +14,26 @@ export function ManageGames({ activeGames, myGames, onJoinGame, onBack }: Manage
     const [selectedCode, setSelectedCode] = useState('');
     const [joinName, setJoinName] = useState('');
     const [joinPhone, setJoinPhone] = useState('');
+    const [joinLevel, setJoinLevel] = useState<number>(5);
     const [error, setError] = useState<string | null>(null);
-    const [joinCode, setJoinCode] = useState('');
     const [isJoining, setIsJoining] = useState(false);
 
     const handleJoinClick = (code: string) => {
         // Check if already in my games
         const isAlreadyJoined = myGames.some(g => g.code === code);
         if (isAlreadyJoined) {
-            onJoinGame(code, '', ''); // Quick join without details
+            onJoinGame(code, '', '', undefined); // Quick join without details
             return;
         }
 
         // Pre-fill from localStorage
         const savedName = localStorage.getItem('recocho_user_name') || '';
         const savedPhone = localStorage.getItem('recocho_user_phone') || '';
+        const savedLevel = parseInt(localStorage.getItem('recocho_user_level') || '5');
 
         setJoinName(savedName);
         setJoinPhone(savedPhone);
+        setJoinLevel(savedLevel);
         setSelectedCode(code);
         setShowJoinModal(true);
         setError(null);
@@ -47,7 +49,7 @@ export function ManageGames({ activeGames, myGames, onJoinGame, onBack }: Manage
         setIsJoining(true);
         setError(null);
         try {
-            const success = await onJoinGame(selectedCode, joinName, joinPhone);
+            const success = await onJoinGame(selectedCode, joinName, joinPhone, joinLevel);
             if (!success) {
                 setError('No se pudo unir a la sala. Verifica el código.');
                 setIsJoining(false);
@@ -55,6 +57,7 @@ export function ManageGames({ activeGames, myGames, onJoinGame, onBack }: Manage
                 // Save details for future use
                 localStorage.setItem('recocho_user_name', joinName);
                 localStorage.setItem('recocho_user_phone', joinPhone);
+                localStorage.setItem('recocho_user_level', joinLevel.toString());
             }
             // If success, RecochoApp will switch view
         } catch (err) {
@@ -101,6 +104,25 @@ export function ManageGames({ activeGames, myGames, onJoinGame, onBack }: Manage
                                 />
                             </div>
 
+                            <div>
+                                <label className="text-xs text-gray-500 uppercase tracking-wider font-bold ml-1 mb-1 block">Nivel Sugerido (1-10)</label>
+                                <div className="grid grid-cols-5 gap-2">
+                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((lvl) => (
+                                        <button
+                                            key={lvl}
+                                            type="button"
+                                            onClick={() => setJoinLevel(lvl)}
+                                            className={`p-2 rounded-lg text-sm font-bold transition-all ${joinLevel === lvl
+                                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20 scale-105'
+                                                : 'bg-black/20 text-gray-400 hover:bg-white/10'
+                                                }`}
+                                        >
+                                            {lvl}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
                             {error && <p className="text-red-400 text-sm text-center">{error}</p>}
 
                             <div className="grid grid-cols-2 gap-4 pt-2">
@@ -124,11 +146,11 @@ export function ManageGames({ activeGames, myGames, onJoinGame, onBack }: Manage
                                     {isJoining ? 'Uniéndome...' : 'Unirse'}
                                 </button>
                             </div>
-                            
+
                             <button
                                 type="button"
                                 onClick={() => {
-                                    onJoinGame(selectedCode, '', '');
+                                    onJoinGame(selectedCode, '', '', undefined);
                                     setShowJoinModal(false);
                                 }}
                                 className="w-full text-center text-sm text-gray-500 hover:text-blue-400 transition-colors mt-2"
@@ -150,96 +172,80 @@ export function ManageGames({ activeGames, myGames, onJoinGame, onBack }: Manage
 
             <h2 className="text-3xl font-bold text-white mb-8">Ver recochos activos</h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Join by Code */}
-                <div className="space-y-8">
+            <div className="flex flex-col gap-8">
+                {/* My History */}
+                {myGames.length > 0 && (
                     <div className="bg-white/5 border border-white/10 rounded-3xl p-6">
                         <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                            <Search className="w-5 h-5 text-blue-400" />
-                            Unirse con Código
+                            <Play className="w-5 h-5 text-purple-400" />
+                            Mis Recochos
                         </h3>
-                        <div className="flex gap-2">
-                            <input
-                                type="text"
-                                value={joinCode}
-                                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                                placeholder="CÓDIGO"
-                                className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white uppercase"
-                                maxLength={6}
-                            />
-                            <button
-                                onClick={() => handleJoinClick(joinCode)}
-                                disabled={joinCode.length < 6}
-                                className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-xl font-bold transition-colors disabled:opacity-50"
-                            >
-                                Unirse
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* My History */}
-                    {myGames.length > 0 && (
-                        <div className="bg-white/5 border border-white/10 rounded-3xl p-6">
-                            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                                <Play className="w-5 h-5 text-purple-400" />
-                                Mis Recochos
-                            </h3>
-                            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
-                                {myGames.map((game) => (
-                                    <div key={game.id} className="flex items-center justify-between p-3 bg-black/20 rounded-xl border border-white/5">
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-purple-400 font-mono font-bold">{game.code}</span>
-                                                {game.status !== 'active' && (
-                                                    <span className="text-xs bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full">Finalizado</span>
-                                                )}
-                                            </div>
-                                            <span className="text-gray-400 text-xs">
-                                                {new Date(game.createdAt).toLocaleDateString()}
-                                            </span>
-                                        </div>
-                                        {game.status === 'active' && (
-                                            <button
-                                                onClick={() => handleJoinClick(game.code)}
-                                                className="text-sm bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors"
-                                            >
-                                                Ver
-                                            </button>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* Active Games List */}
-                <div className="bg-white/5 border border-white/10 rounded-3xl p-6 h-fit">
-                    <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                        <Play className="w-5 h-5 text-green-400" />
-                        Salas Activas ({activeGames.length}/5)
-                    </h3>
-
-                    {activeGames.length === 0 ? (
-                        <p className="text-gray-400 text-center py-8">No hay salas activas</p>
-                    ) : (
-                        <div className="space-y-3">
-                            {activeGames.map((game) => (
+                        <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+                            {myGames.map((game) => (
                                 <div key={game.id} className="flex items-center justify-between p-3 bg-black/20 rounded-xl border border-white/5">
                                     <div>
-                                        <span className="text-green-400 font-mono font-bold mr-3">{game.code}</span>
-                                        <span className="text-gray-300 text-sm">{game.teamSize}v{game.teamSize}</span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-purple-400 font-mono font-bold">{game.code}</span>
+                                            {game.status !== 'active' && (
+                                                <span className="text-xs bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full">Finalizado</span>
+                                            )}
+                                        </div>
+                                        <span className="text-gray-400 text-xs">
+                                            {new Date(game.createdAt).toLocaleDateString()}
+                                        </span>
                                     </div>
-                                    <button
-                                        onClick={() => handleJoinClick(game.code)}
-                                        className="text-sm bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors"
-                                    >
-                                        Ver
-                                    </button>
+                                    {game.status === 'active' && (
+                                        <button
+                                            onClick={() => handleJoinClick(game.code)}
+                                            className="text-sm bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors"
+                                        >
+                                            Ver
+                                        </button>
+                                    )}
                                 </div>
                             ))}
                         </div>
-                    )}
+                    </div>
+                )}
+
+                {/* Active Games List */}
+                <div className="w-full">
+                    <div className="bg-[#1A2A2A] border border-white/10 rounded-3xl p-6 h-full">
+                        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                            <Play className="w-5 h-5 text-green-400" />
+                            Salas Activas ({activeGames.length}/5)
+                        </h3>
+
+                        <div className="space-y-3">
+                            {activeGames.length === 0 ? (
+                                <div className="text-center py-10 text-gray-500">
+                                    <p>No hay partidos activos en este momento.</p>
+                                </div>
+                            ) : (
+                                activeGames.map((game) => (
+                                    <div key={game.id} className="flex items-center justify-between p-4 bg-black/20 rounded-xl border border-white/5 hover:border-white/10 transition-colors">
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-green-400 font-mono font-bold text-lg">{game.code}</span>
+                                                <span className="text-gray-300 text-xs bg-white/10 px-2 py-0.5 rounded uppercase tracking-wider">{game.teamSize} vs {game.teamSize}</span>
+                                            </div>
+                                            {game.location && (
+                                                <p className="text-sm text-gray-400 flex items-center gap-1">
+                                                    📍 {game.location}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <button
+                                            onClick={() => handleJoinClick(game.code)}
+                                            className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors font-medium text-sm border border-white/10"
+                                        >
+                                            Unirse
+                                        </button>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

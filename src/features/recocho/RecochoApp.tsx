@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useRecocho } from '../../hooks/useRecocho';
 import { Landing } from './components/Landing';
@@ -24,6 +24,7 @@ export function RecochoApp({ onBackToHub }: RecochoAppProps) {
         error,
         addPlayer,
         removePlayer,
+        updatePlayerStatus,
         updatePitchPrice,
         deleteGame,
         setCurrentGame
@@ -41,9 +42,9 @@ export function RecochoApp({ onBackToHub }: RecochoAppProps) {
 
     const [recoveryPinInput, setRecoveryPinInput] = useState('');
 
-    const handleCreateGame = async (teamSize: number, pitchPrice: number, recoveryPin?: string) => {
+    const handleCreateGame = async (teamSize: number, pitchPrice: number, recoveryPin?: string, location?: string) => {
         setIsCreating(true);
-        const result = await createGame({ teamSize, pitchPrice, recoveryPin });
+        const result = await createGame({ teamSize, pitchPrice, recoveryPin, location });
         setIsCreating(false);
 
         if (result) {
@@ -263,6 +264,21 @@ export function RecochoApp({ onBackToHub }: RecochoAppProps) {
                     </div>
 
                     <div className="w-10 md:hidden" /> {/* Spacer */}
+
+                    {/* DEV ONLY: Delete All Button */}
+                    <button
+                        onClick={async () => {
+                            if (confirm('⚠️ PELIGRO: ¿Estás seguro de que quieres ELIMINAR TODAS las salas activas? Esta acción no se puede deshacer.')) {
+                                const deletePromises = activeGames.map(game => deleteGame(game.id));
+                                await Promise.all(deletePromises);
+                                alert('Todas las salas han sido eliminadas.');
+                            }
+                        }}
+                        className="absolute top-2 right-2 md:top-6 md:right-6 p-2 bg-red-500/10 hover:bg-red-500/30 text-red-500 text-xs rounded border border-red-500/20 transition-colors"
+                        title="Eliminar todas las salas"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </button>
                 </header>
 
                 {/* Content */}
@@ -311,8 +327,9 @@ export function RecochoApp({ onBackToHub }: RecochoAppProps) {
                     {view === 'room' && currentGame && (
                         <GameRoom
                             game={currentGame}
-                            onAddPlayer={(name, team, phone, status) => addPlayer(currentGame.id, name, team, phone, status)}
+                            onAddPlayer={(name, team, phone, status, level) => addPlayer(currentGame.id, name, team, phone, status, level)}
                             onRemovePlayer={(playerId) => removePlayer(currentGame.id, playerId)}
+                            onUpdatePlayerStatus={(playerId, status, level) => updatePlayerStatus(currentGame.id, playerId, status, level)}
                             onUpdatePrice={(price) => updatePitchPrice(currentGame.id, price)}
                             onDelete={async () => {
                                 await deleteGame(currentGame.id);
