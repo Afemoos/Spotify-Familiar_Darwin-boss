@@ -39,9 +39,11 @@ export function RecochoApp({ onBackToHub }: RecochoAppProps) {
     const [recoveredAdminCode, setRecoveredAdminCode] = useState<string | null>(null);
     const [recoveryError, setRecoveryError] = useState<string | null>(null);
 
-    const handleCreateGame = async (teamSize: number, pitchPrice: number) => {
+    const [recoveryPinInput, setRecoveryPinInput] = useState('');
+
+    const handleCreateGame = async (teamSize: number, pitchPrice: number, recoveryPin?: string) => {
         setIsCreating(true);
-        const result = await createGame({ teamSize, pitchPrice });
+        const result = await createGame({ teamSize, pitchPrice, recoveryPin });
         setIsCreating(false);
 
         if (result) {
@@ -164,12 +166,16 @@ export function RecochoApp({ onBackToHub }: RecochoAppProps) {
                                                     // Check permissions
                                                     const isSuperAdmin = user?.email === 'darwin47@elprivado.app';
                                                     const isCreator = user && game.createdBy === user.uid;
+                                                    const isLocalOwner = localStorage.getItem(`recocho_owner_${game.id}`) === 'true';
+                                                    const isPinCorrect = game.recoveryPin && game.recoveryPin === recoveryPinInput;
 
-                                                    if (isSuperAdmin || isCreator) {
+                                                    if (isSuperAdmin || isCreator || isLocalOwner || isPinCorrect) {
                                                         setRecoveredAdminCode(game.adminCode);
                                                         setRecoveryError(null);
+                                                    } else if (game.recoveryPin) {
+                                                        setRecoveryError("PIN incorrecto o no tienes permisos");
                                                     } else {
-                                                        setRecoveryError("No tienes permisos para recuperar este código");
+                                                        setRecoveryError("Esta sala no tiene PIN de recuperación configurado");
                                                     }
                                                 }}
                                                 disabled={!recoveryPublicCode.trim()}
@@ -177,6 +183,26 @@ export function RecochoApp({ onBackToHub }: RecochoAppProps) {
                                             >
                                                 Recuperar
                                             </button>
+
+                                            <div className="relative">
+                                                <div className="absolute inset-0 flex items-center">
+                                                    <div className="w-full border-t border-white/10"></div>
+                                                </div>
+                                                <div className="relative flex justify-center text-xs uppercase">
+                                                    <span className="bg-[#1A2A2A] px-2 text-gray-500">O usa tu PIN</span>
+                                                </div>
+                                            </div>
+
+                                            <input
+                                                type="text"
+                                                inputMode="numeric"
+                                                pattern="[0-9]*"
+                                                maxLength={4}
+                                                value={recoveryPinInput}
+                                                onChange={(e) => setRecoveryPinInput(e.target.value.replace(/\D/g, ''))}
+                                                placeholder="PIN (Si lo configuraste)"
+                                                className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white text-center text-lg font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            />
                                         </>
                                     ) : (
                                         <div className="text-center space-y-4 animate-in fade-in zoom-in">
@@ -245,7 +271,6 @@ export function RecochoApp({ onBackToHub }: RecochoAppProps) {
                         <Landing
                             onCreateClick={() => setView('create')}
                             onManageClick={() => setView('manage')}
-                            onJoinClick={() => setView('manage')}
                             onAdminClick={() => setShowAdminPrompt(true)}
                         />
                     )}
@@ -267,12 +292,15 @@ export function RecochoApp({ onBackToHub }: RecochoAppProps) {
                             onJoinGame={async (code, name, phone) => {
                                 const { success, game } = await joinGame(code);
                                 if (success && game) {
-                                    // Auto-assign team (smaller team)
-                                    const teamA = game.players.filter(p => p.team === 'A').length;
-                                    const teamB = game.players.filter(p => p.team === 'B').length;
-                                    const assignedTeam = teamA <= teamB ? 'A' : 'B';
+                                    // Only auto-add if details are provided (new join)
+                                    if (name && phone) {
+                                        // Auto-assign team (smaller team)
+                                        const teamA = game.players.filter(p => p.team === 'A').length;
+                                        const teamB = game.players.filter(p => p.team === 'B').length;
+                                        const assignedTeam = teamA <= teamB ? 'A' : 'B';
 
-                                    await addPlayer(game.id, name, assignedTeam, phone, 'suggested');
+                                        await addPlayer(game.id, name, assignedTeam, phone, 'suggested');
+                                    }
                                     setView('room');
                                 }
                                 return success;

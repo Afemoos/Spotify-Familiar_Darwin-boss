@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Users, DollarSign, Loader2 } from 'lucide-react';
 
 interface CreateGameProps {
-    onCreate: (teamSize: number, pitchPrice: number) => Promise<void>;
+    onCreate: (teamSize: number, pitchPrice: number, recoveryPin?: string) => Promise<void>;
     onCancel: () => void;
     isCreating: boolean;
     error?: string | null;
@@ -11,11 +11,12 @@ interface CreateGameProps {
 export function CreateGame({ onCreate, onCancel, isCreating, error }: CreateGameProps) {
     const [teamSize, setTeamSize] = useState<number>(5);
     const [pitchPrice, setPitchPrice] = useState<string>('');
+    const [recoveryPin, setRecoveryPin] = useState<string>('');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const price = parseFloat(pitchPrice) || 0;
-        await onCreate(teamSize, price);
+        await onCreate(teamSize, price, recoveryPin || undefined);
     };
 
     return (
@@ -66,6 +67,24 @@ export function CreateGame({ onCreate, onCancel, isCreating, error }: CreateGame
                             min="0"
                         />
                         <p className="text-xs text-gray-400">Deja en 0 si aún no conoces el precio</p>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm text-gray-400 font-medium flex items-center gap-2">
+                            <span className="text-xs bg-white/10 px-1.5 py-0.5 rounded">PIN</span>
+                            PIN de Recuperación (Opcional)
+                        </label>
+                        <input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            maxLength={4}
+                            value={recoveryPin}
+                            onChange={(e) => setRecoveryPin(e.target.value.replace(/\D/g, ''))}
+                            placeholder="Ej: 1234"
+                            className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white text-lg focus:outline-none focus:ring-2 focus:ring-green-500/50 tracking-widest font-mono"
+                        />
+                        <p className="text-xs text-gray-400">Te servirá para recuperar el acceso de admin desde otro dispositivo.</p>
                     </div>
 
                     <div className="flex gap-4 pt-4">

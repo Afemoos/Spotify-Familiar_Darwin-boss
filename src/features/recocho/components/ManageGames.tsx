@@ -19,6 +19,19 @@ export function ManageGames({ activeGames, myGames, onJoinGame, onBack }: Manage
     const [isJoining, setIsJoining] = useState(false);
 
     const handleJoinClick = (code: string) => {
+        // Check if already in my games
+        const isAlreadyJoined = myGames.some(g => g.code === code);
+        if (isAlreadyJoined) {
+            onJoinGame(code, '', ''); // Quick join without details
+            return;
+        }
+
+        // Pre-fill from localStorage
+        const savedName = localStorage.getItem('recocho_user_name') || '';
+        const savedPhone = localStorage.getItem('recocho_user_phone') || '';
+
+        setJoinName(savedName);
+        setJoinPhone(savedPhone);
         setSelectedCode(code);
         setShowJoinModal(true);
         setError(null);
@@ -38,8 +51,12 @@ export function ManageGames({ activeGames, myGames, onJoinGame, onBack }: Manage
             if (!success) {
                 setError('No se pudo unir a la sala. Verifica el código.');
                 setIsJoining(false);
+            } else {
+                // Save details for future use
+                localStorage.setItem('recocho_user_name', joinName);
+                localStorage.setItem('recocho_user_phone', joinPhone);
             }
-            // If success, RecochoApp will switch view, so we don't need to do anything here
+            // If success, RecochoApp will switch view
         } catch (err) {
             setError('Ocurrió un error al unirse');
             setIsJoining(false);

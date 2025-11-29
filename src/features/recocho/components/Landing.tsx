@@ -1,13 +1,12 @@
-import { Plus, Users, Settings, Search } from 'lucide-react';
+import { Plus, Users, Settings } from 'lucide-react';
 
 interface LandingProps {
     onCreateClick: () => void;
     onManageClick: () => void;
-    onJoinClick: () => void;
     onAdminClick: () => void;
 }
 
-export function Landing({ onCreateClick, onManageClick, onJoinClick, onAdminClick }: LandingProps) {
+export function Landing({ onCreateClick, onManageClick, onAdminClick }: LandingProps) {
     return (
         <div className="flex flex-col items-center justify-center space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-700">
             <div className="text-center space-y-2">
@@ -60,14 +59,6 @@ export function Landing({ onCreateClick, onManageClick, onJoinClick, onAdminClic
                     </p>
                 </button>
             </div>
-
-            <button
-                onClick={onJoinClick}
-                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors mt-8"
-            >
-                <Search className="w-4 h-4" />
-                <span>Unirse con código existente</span>
-            </button>
         </div>
     );
 }

@@ -127,6 +127,7 @@ export function useRecocho() {
             const newGame: Omit<RecochoGame, 'id'> = {
                 code,
                 adminCode,
+                recoveryPin: params.recoveryPin,
                 createdAt: Date.now(),
                 teamSize: params.teamSize,
                 pitchPrice: params.pitchPrice,
