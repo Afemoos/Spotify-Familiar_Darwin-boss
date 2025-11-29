@@ -74,45 +74,47 @@ export function Lobby({ onSelectApp, onNavigateToAuth }: LobbyProps) {
     const spotifyStatus = getSpotifyStatus();
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 to-slate-900 flex flex-col items-center justify-center p-6 font-sans text-white relative">
-            {/* Auth Button */}
-            <div className="absolute top-6 right-6 z-10 flex items-center gap-2">
-                {user ? (
-                    <>
-                        <div
-                            onClick={() => setShowInfoModal(true)}
-                            className="flex items-center gap-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-2 pr-4 animate-in fade-in slide-in-from-top-5 duration-500 hover:bg-white/10 transition-colors hover:shadow-lg hover:shadow-indigo-500/10 cursor-pointer group"
-                        >
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
-                                <span className="font-bold text-white text-lg">
-                                    {user.email?.[0].toUpperCase()}
-                                </span>
+        <div className="min-h-screen bg-gradient-to-br from-slate-950 to-slate-900 flex flex-col font-sans text-white relative overflow-hidden">
+            {/* Header with Auth Button */}
+            <div className="w-full flex justify-end p-6 z-20 relative">
+                <div className="flex items-center gap-2">
+                    {user ? (
+                        <>
+                            <div
+                                onClick={() => setShowInfoModal(true)}
+                                className="flex items-center gap-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-2 pr-4 animate-in fade-in slide-in-from-top-5 duration-500 hover:bg-white/10 transition-colors hover:shadow-lg hover:shadow-indigo-500/10 cursor-pointer group"
+                            >
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
+                                    <span className="font-bold text-white text-lg">
+                                        {user.email?.[0].toUpperCase()}
+                                    </span>
+                                </div>
+                                <div className="hidden md:block text-left mr-2">
+                                    <p className="text-xs text-gray-400">Hola,</p>
+                                    <p className="text-sm font-medium text-white max-w-[150px] truncate capitalize">
+                                        {user.displayName || user.email?.split('@')[0]}
+                                    </p>
+                                </div>
                             </div>
-                            <div className="hidden md:block text-left mr-2">
-                                <p className="text-xs text-gray-400">Hola,</p>
-                                <p className="text-sm font-medium text-white max-w-[150px] truncate capitalize">
-                                    {user.displayName || user.email?.split('@')[0]}
-                                </p>
-                            </div>
-                        </div>
-                        <button
-                            onClick={() => logOut()}
-                            className="p-3 bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30 rounded-2xl transition-all text-gray-400 hover:text-red-400 shadow-lg"
-                            title="Cerrar Sesión"
+                            <button
+                                onClick={() => logOut()}
+                                className="p-3 bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30 rounded-2xl transition-all text-gray-400 hover:text-red-400 shadow-lg"
+                                title="Cerrar Sesión"
+                            >
+                                <LogOut className="w-5 h-5" />
+                            </button>
+                        </>
+                    ) : (
+                        <Button
+                            onClick={onNavigateToAuth}
+                            variant="ghost"
+                            color="indigo"
+                            icon={<LogIn className="w-4 h-4" />}
                         >
-                            <LogOut className="w-5 h-5" />
-                        </button>
-                    </>
-                ) : (
-                    <Button
-                        onClick={onNavigateToAuth}
-                        variant="ghost"
-                        color="indigo"
-                        icon={<LogIn className="w-4 h-4" />}
-                    >
-                        Iniciar Sesión
-                    </Button>
-                )}
+                            Iniciar Sesión
+                        </Button>
+                    )}
+                </div>
             </div>
 
             {/* User Info Modal */}
@@ -191,7 +193,7 @@ export function Lobby({ onSelectApp, onNavigateToAuth }: LobbyProps) {
                 </div>
             )}
 
-            <div className="max-w-4xl w-full space-y-12">
+            <div className="flex-1 flex flex-col items-center justify-center p-6 w-full max-w-4xl mx-auto space-y-12 pb-20">
                 <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-5 duration-700">
                     <h1 className="text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
                         Lobby
@@ -233,7 +235,7 @@ export function Lobby({ onSelectApp, onNavigateToAuth }: LobbyProps) {
                 </div>
             </div>
 
-            <footer className="fixed bottom-6 text-center text-gray-600 text-xs">
+            <footer className="w-full text-center text-gray-600 text-xs py-6">
                 &copy; {new Date().getFullYear()} El Privado Team
             </footer>
         </div >

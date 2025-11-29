@@ -9,13 +9,19 @@ interface PaymentListProps {
     onChangeMonth: (offset: number) => void;
     onMarkAsPaid: (member: Member, key: string) => Promise<void>;
     onUndoPayment: (key: string) => Promise<void>;
-    isGuest?: boolean;
+    isGuest: boolean; // Kept for compatibility, but logic inside uses it for read-only
+    role?: 'admin' | 'member' | 'visitor';
 }
 
-export function PaymentList({ members, payments, currentDate, onChangeMonth, onMarkAsPaid, onUndoPayment, isGuest = false }: PaymentListProps) {
+export function PaymentList({ members, payments, currentDate, onChangeMonth, onMarkAsPaid, onUndoPayment, isGuest = false, role }: PaymentListProps) {
     const [paymentToUndo, setPaymentToUndo] = useState<string | null>(null);
 
     const monthName = currentDate.toLocaleString('es-CO', { month: 'long', year: 'numeric' });
+
+    // Determine effective role if not passed
+    const effectiveRole = role || (isGuest ? 'visitor' : 'admin');
+    const isReadOnly = effectiveRole !== 'admin';
+    const showVisitorBanner = effectiveRole === 'visitor';
 
     const getPaymentKey = (memberId: string) => {
         const month = currentDate.getMonth() + 1;
@@ -37,7 +43,7 @@ export function PaymentList({ members, payments, currentDate, onChangeMonth, onM
                 <button onClick={() => onChangeMonth(1)} className="p-2 hover:bg-white/10 rounded-full text-green-400 transition-colors"><ChevronRight className="w-6 h-6" /></button>
             </div>
 
-            {isGuest && (
+            {showVisitorBanner && (
                 <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex items-center gap-3 text-blue-300 animate-in fade-in slide-in-from-top-2">
                     <Lock className="w-5 h-5 shrink-0" />
                     <p className="text-sm font-medium">Estás en modo visitante. Solo puedes ver la información.</p>
@@ -65,18 +71,18 @@ export function PaymentList({ members, payments, currentDate, onChangeMonth, onM
                             ) : (
                                 <div className="flex items-center gap-3 group">
                                     <button
-                                        onClick={() => !isPaid && !isGuest && onMarkAsPaid(member, key)}
-                                        disabled={isPaid || isGuest}
-                                        className={`flex-1 p-5 rounded-xl shadow-lg text-left transition-all transform active:scale-[0.98] flex justify-between items-center relative overflow-hidden ${isPaid ? 'bg-white/5 text-gray-400 cursor-default border border-white/10' : isGuest ? 'bg-white/5 text-gray-400 cursor-default border border-white/10' : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:shadow-green-900/20 hover:to-green-500 border-b-4 border-green-800'}`}
+                                        onClick={() => !isPaid && !isReadOnly && onMarkAsPaid(member, key)}
+                                        disabled={isPaid || isReadOnly}
+                                        className={`flex-1 p-5 rounded-xl shadow-lg text-left transition-all transform active:scale-[0.98] flex justify-between items-center relative overflow-hidden ${isPaid ? 'bg-white/5 text-gray-400 cursor-default border border-white/10' : isReadOnly ? 'bg-white/5 text-gray-400 cursor-default border border-white/10' : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:shadow-green-900/20 hover:to-green-500 border-b-4 border-green-800'}`}
                                     >
                                         <span className="font-bold text-xl truncate pr-2 z-10 relative">{member.name}</span>
                                         {isPaid ? (
                                             <span className="flex items-center gap-1 text-sm font-bold bg-green-500/20 text-green-400 px-3 py-1 rounded-full shrink-0 z-10 shadow-sm border border-green-500/30">PAGADO <Check className="w-4 h-4" /></span>
                                         ) : (
-                                            !isGuest && <span className="text-xs sm:text-sm bg-black/30 px-3 py-1 rounded-full shrink-0 z-10 backdrop-blur-sm border border-white/10">Tocar para cobrar</span>
+                                            !isReadOnly && <span className="text-xs sm:text-sm bg-black/30 px-3 py-1 rounded-full shrink-0 z-10 backdrop-blur-sm border border-white/10">Tocar para cobrar</span>
                                         )}
                                     </button>
-                                    {isPaid && !isGuest && <button onClick={() => setPaymentToUndo(member.id)} className="p-4 bg-white/5 text-yellow-500 rounded-xl border border-white/10 hover:bg-yellow-500/10 hover:text-yellow-400 hover:border-yellow-500/30 transition-all shadow-sm" title="Revertir pago"><RotateCcw className="w-6 h-6" /></button>}
+                                    {isPaid && !isReadOnly && <button onClick={() => setPaymentToUndo(member.id)} className="p-4 bg-white/5 text-yellow-500 rounded-xl border border-white/10 hover:bg-yellow-500/10 hover:text-yellow-400 hover:border-yellow-500/30 transition-all shadow-sm" title="Revertir pago"><RotateCcw className="w-6 h-6" /></button>}
                                 </div>
                             )}
                         </div>

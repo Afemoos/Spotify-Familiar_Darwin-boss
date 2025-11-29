@@ -5,7 +5,7 @@ import { MemberManagement } from './MemberManagement';
 import { PaymentList } from './PaymentList';
 import { HistoryReport } from './HistoryReport';
 import { WhatsAppButton } from './WhatsAppButton';
-import { Member, PaymentData, Request } from '../../../types';
+import { Member, PaymentData, Request, UserRole } from '../../../types';
 
 interface DesktopLayoutProps {
     user: User | null;
@@ -21,7 +21,7 @@ interface DesktopLayoutProps {
     markAsPaid: (member: Member, key: string) => Promise<void>;
     undoPayment: (key: string) => Promise<void>;
     deleteHistorical: (key: string) => Promise<void>;
-    isGuest: boolean;
+    role: UserRole;
     onLogout: () => void;
     requests: Request[];
     onAcceptRequest: (request: Request) => Promise<void>;
@@ -43,7 +43,7 @@ export function DesktopLayout({
     markAsPaid,
     undoPayment,
     deleteHistorical,
-    isGuest,
+    role,
     onLogout,
     requests,
     onAcceptRequest,
@@ -64,7 +64,7 @@ export function DesktopLayout({
                 </div>
 
                 <nav className="flex-1 p-4 space-y-2">
-                    {!isGuest && (
+                    {role === 'admin' && (
                         <button
                             onClick={() => setActiveTab(0)}
                             className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${activeTab === 0 ? 'bg-green-600/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'}`}
@@ -93,7 +93,7 @@ export function DesktopLayout({
                     <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                         <p className="text-sm text-gray-400 mb-1">Usuario</p>
                         <p className="font-medium text-white truncate capitalize">
-                            {isGuest ? 'Visitante' : (members.find(m => m.userId === user?.uid)?.name || user?.email?.split('@')[0] || 'Admin')}
+                            {role === 'visitor' ? 'Visitante' : (members.find(m => m.userId === user?.uid)?.name || user?.email?.split('@')[0] || 'Admin')}
                         </p>
                     </div>
                 </div>
@@ -107,12 +107,12 @@ export function DesktopLayout({
                     requests={requests}
                     onAcceptRequest={onAcceptRequest}
                     onRejectRequest={onRejectRequest}
-                    isGuest={isGuest}
+                    isGuest={role === 'visitor'}
                 />
 
                 <div className="flex-1 overflow-y-auto p-8">
                     <div className="max-w-5xl mx-auto">
-                        {activeTab === 0 && !isGuest && (
+                        {activeTab === 0 && role === 'admin' && (
                             <div className="max-w-2xl">
                                 <MemberManagement
                                     members={members}
@@ -133,10 +133,10 @@ export function DesktopLayout({
                                         onChangeMonth={changeMonth}
                                         onMarkAsPaid={markAsPaid}
                                         onUndoPayment={undoPayment}
-                                        isGuest={isGuest}
+                                        isGuest={role !== 'admin'}
                                     />
                                 </div>
-                                {!isGuest && (
+                                {role === 'admin' && (
                                     <div className="lg:col-span-1 sticky top-8">
                                         <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
                                             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
@@ -186,13 +186,13 @@ export function DesktopLayout({
                                 onChangeMonth={changeMonth}
                                 onSelectMonth={selectSpecificMonth}
                                 onDeleteHistorical={deleteHistorical}
-                                isGuest={isGuest}
+                                isGuest={role !== 'admin'}
                             />
                         )}
                     </div>
                 </div>
 
-                {!isGuest && activeTab === 1 && (
+                {role === 'admin' && activeTab === 1 && (
                     <WhatsAppButton className="absolute bottom-8 right-8" />
                 )}
             </main>

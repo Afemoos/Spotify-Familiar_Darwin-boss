@@ -26,3 +26,5 @@ export interface Request {
     createdAt: number;
     status: 'pending' | 'accepted' | 'rejected';
 }
+
+export type UserRole = 'admin' | 'member' | 'visitor';

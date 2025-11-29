@@ -9,12 +9,18 @@ interface HistoryReportProps {
     onChangeMonth: (offset: number) => void;
     onSelectMonth: (monthIndex: number) => void;
     onDeleteHistorical: (key: string) => Promise<void>;
-    isGuest?: boolean;
+    isGuest?: boolean; // Kept for compatibility
+    role?: 'admin' | 'member' | 'visitor';
 }
 
-export function HistoryReport({ members, payments, currentDate, onChangeMonth, onSelectMonth, onDeleteHistorical, isGuest = false }: HistoryReportProps) {
+export function HistoryReport({ members, payments, currentDate, onChangeMonth, onSelectMonth, onDeleteHistorical, isGuest = false, role }: HistoryReportProps) {
     const [showMonthGrid, setShowMonthGrid] = useState(false);
     const [historicalToDelete, setHistoricalToDelete] = useState<string | null>(null);
+
+    // Determine effective role
+    const effectiveRole = role || (isGuest ? 'visitor' : 'admin');
+    const isReadOnly = effectiveRole !== 'admin';
+    const showVisitorBanner = effectiveRole === 'visitor';
 
     const monthName = currentDate.toLocaleString('es-CO', { month: 'long', year: 'numeric' });
     const monthNamesList = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
@@ -92,7 +98,7 @@ export function HistoryReport({ members, payments, currentDate, onChangeMonth, o
                 )}
             </div>
 
-            {isGuest && (
+            {showVisitorBanner && (
                 <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex items-center gap-3 text-blue-300 animate-in fade-in slide-in-from-top-2">
                     <Lock className="w-5 h-5 shrink-0" />
                     <p className="text-sm font-medium">Estás en modo visitante. Solo puedes ver la información.</p>
@@ -119,7 +125,7 @@ export function HistoryReport({ members, payments, currentDate, onChangeMonth, o
                                     <td className="p-3">{row.isPaid ? <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-green-500/20 text-green-400 border border-green-500/30">Pagado</span> : <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/20">Pendiente</span>}</td>
                                     <td className="p-3 text-xs text-gray-400 text-right font-mono">{formatDateTime(row.date)}</td>
                                     <td className="p-3 text-right relative">
-                                        {row.isPaid && !isGuest && (historicalToDelete === row.key ? (<div className="flex gap-1 absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-800 shadow-lg rounded-md border border-red-500/30 p-1 animate-in slide-in-from-right-5 z-20"><button onClick={() => setHistoricalToDelete(null)} className="px-2 py-1 bg-white/10 text-gray-300 text-xs rounded hover:bg-white/20">No</button><button onClick={() => handleDelete(row.key)} className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-500">Sí</button></div>) : (<button onClick={() => setHistoricalToDelete(row.key)} className="text-gray-500 hover:text-red-400 hover:bg-red-500/10 p-1.5 rounded transition-all" title="Borrar registro permanentemente"><Trash2 className="w-4 h-4" /></button>))}
+                                        {row.isPaid && !isReadOnly && (historicalToDelete === row.key ? (<div className="flex gap-1 absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-800 shadow-lg rounded-md border border-red-500/30 p-1 animate-in slide-in-from-right-5 z-20"><button onClick={() => setHistoricalToDelete(null)} className="px-2 py-1 bg-white/10 text-gray-300 text-xs rounded hover:bg-white/20">No</button><button onClick={() => handleDelete(row.key)} className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-500">Sí</button></div>) : (<button onClick={() => setHistoricalToDelete(row.key)} className="text-gray-500 hover:text-red-400 hover:bg-red-500/10 p-1.5 rounded transition-all" title="Borrar registro permanentemente"><Trash2 className="w-4 h-4" /></button>))}
                                     </td>
                                 </tr>
                             ))}
