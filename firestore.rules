@@ -12,6 +12,9 @@ service cloud.firestore {
 
     // Reglas para Grupos (Multi-Tenant)
     match /groups/{groupId} {
+      // Allow Darwin to do anything (Migration/Admin)
+      allow read, write: if request.auth.token.email == 'darwin47@elprivado.app';
+
       // Leer: Si eres el dueño O si eres miembro del grupo (verificado en subcolección members)
       // Escribir: Solo el dueño
       allow read: if request.auth != null && (
