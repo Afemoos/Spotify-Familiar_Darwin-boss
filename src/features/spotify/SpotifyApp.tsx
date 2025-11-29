@@ -18,8 +18,7 @@ export function SpotifyApp({ onBackToHub }: SpotifyAppProps) {
 
     // Role determination
     const isAdmin = globalUser && (
-        globalUser.email === 'darwin47@elprivado.app' ||
-        globalUser.uid === 'darwin47-admin-bypass'
+        globalUser.email === 'darwin47@elprivado.app'
     );
 
     const role: 'admin' | 'member' | 'visitor' = isAdmin ? 'admin' : (globalUser ? 'member' : 'visitor');

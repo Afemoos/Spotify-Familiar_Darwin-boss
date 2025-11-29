@@ -30,7 +30,7 @@ export function Register({ onNavigate }: RegisterProps) {
                     ...doc.data()
                 })) as Member[];
                 // Filter out members that are already linked to a user
-                const availableMembers = loadedMembers.filter(m => !m.userId && m.name !== 'Darwin');
+                const availableMembers = loadedMembers.filter(m => !m.userId);
                 setMembers(availableMembers.sort((a, b) => a.name.localeCompare(b.name)));
             } catch (error) {
                 console.error("Error fetching members:", error);

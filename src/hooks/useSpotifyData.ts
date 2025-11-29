@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, onSnapshot, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth, db, APP_ID } from '../config/firebase';
 import { Member, PaymentData, Request } from '../types';
@@ -130,6 +130,13 @@ export function useSpotifyData() {
         } catch (e) { console.error(e); throw e; }
     };
 
+    const toggleMemberExempt = async (id: string, isExempt: boolean) => {
+        try {
+            const docRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'spotify_members', id);
+            await updateDoc(docRef, { isExempt });
+        } catch (e) { console.error(e); throw e; }
+    };
+
     return {
         user,
         members,
@@ -143,6 +150,7 @@ export function useSpotifyData() {
         deleteHistorical,
         requestSpot,
         acceptRequest,
-        rejectRequest
+        rejectRequest,
+        toggleMemberExempt
     };
 }
