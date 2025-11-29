@@ -70,7 +70,7 @@ export function MigrationTool() {
             const legacyGroupId = 'darwin-legacy';
             const membersRef = collection(db, 'groups', legacyGroupId, 'members');
             const snapshot = await getDocs(membersRef);
-
+            
             const memberUids: string[] = [];
             snapshot.docs.forEach(doc => {
                 const data = doc.data();
@@ -111,34 +111,6 @@ export function MigrationTool() {
         }
     };
 
-    const syncCode = async () => {
-        if (!user) return;
-        setIsSyncing(true);
-        setStatus('Syncing invite code...');
-        try {
-            const legacyGroupId = 'darwin-legacy';
-            const groupRef = doc(db, 'groups', legacyGroupId);
-            const groupSnap = await getDoc(groupRef);
-            let inviteCode = groupSnap.data()?.inviteCode;
-
-            if (!inviteCode) {
-                inviteCode = 'DARWIN'; // Fixed code for legacy
-                const batch = writeBatch(db);
-                batch.set(doc(db, 'invites', inviteCode), { groupId: legacyGroupId });
-                batch.update(groupRef, { inviteCode: inviteCode });
-                await batch.commit();
-                setStatus(`Invite code 'DARWIN' created and synced.`);
-            } else {
-                setStatus(`Invite code already exists: ${ inviteCode }. No action needed.`);
-            }
-        } catch (error) {
-            console.error(error);
-            setStatus(`Error syncing code: ${ error } `);
-        } finally {
-            setIsSyncing(false);
-        }
-    };
-
     return (
         <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
             <div className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-xl max-w-sm">
@@ -151,7 +123,7 @@ export function MigrationTool() {
                     >
                         {isMigrating ? 'Migrating...' : 'Run Migration (Legacy -> Groups)'}
                     </button>
-
+                    
                     <button
                         onClick={syncAccess}
                         disabled={isSyncing}
