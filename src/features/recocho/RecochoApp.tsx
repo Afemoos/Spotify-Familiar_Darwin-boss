@@ -34,6 +34,10 @@ export function RecochoApp({ onBackToHub }: RecochoAppProps) {
     const [adminGameId, setAdminGameId] = useState<string | null>(null);
     const [showAdminPrompt, setShowAdminPrompt] = useState(false);
     const [adminCode, setAdminCode] = useState('');
+    const [showRecovery, setShowRecovery] = useState(false);
+    const [recoveryPublicCode, setRecoveryPublicCode] = useState('');
+    const [recoveredAdminCode, setRecoveredAdminCode] = useState<string | null>(null);
+    const [recoveryError, setRecoveryError] = useState<string | null>(null);
 
     const handleCreateGame = async (teamSize: number, pitchPrice: number) => {
         setIsCreating(true);
@@ -85,39 +89,124 @@ export function RecochoApp({ onBackToHub }: RecochoAppProps) {
             {showAdminPrompt && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-[#1A2A2A] border border-white/10 rounded-3xl p-8 max-w-md w-full animate-in fade-in zoom-in duration-300">
-                        <h3 className="text-2xl font-bold text-white mb-2">Administrar Sala</h3>
-                        <p className="text-gray-400 mb-6">Ingresa el código de la sala para modificarla</p>
+                        {!showRecovery ? (
+                            <>
+                                <h3 className="text-2xl font-bold text-white mb-2">Administrar Sala</h3>
+                                <p className="text-gray-400 mb-6">Ingresa el código de la sala para modificarla</p>
 
-                        <form onSubmit={handleAdminSubmit} className="space-y-4">
-                            <input
-                                type="text"
-                                value={adminCode}
-                                onChange={(e) => setAdminCode(e.target.value.toUpperCase())}
-                                placeholder="CÓDIGO"
-                                className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white text-center text-2xl font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-purple-500/50 uppercase"
-                                autoFocus
-                            />
-                            {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+                                <form onSubmit={handleAdminSubmit} className="space-y-4">
+                                    <input
+                                        type="text"
+                                        value={adminCode}
+                                        onChange={(e) => setAdminCode(e.target.value.toUpperCase())}
+                                        placeholder="CÓDIGO"
+                                        className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white text-center text-2xl font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-purple-500/50 uppercase"
+                                        autoFocus
+                                    />
+                                    {error && <p className="text-red-400 text-sm text-center">{error}</p>}
 
-                            <div className="grid grid-cols-2 gap-4 pt-2">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setShowAdminPrompt(false);
-                                        setAdminCode('');
-                                    }}
-                                    className="p-3 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="p-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-medium shadow-lg shadow-purple-500/20 transition-all hover:scale-105"
-                                >
-                                    Ingresar
-                                </button>
-                            </div>
-                        </form>
+                                    <div className="grid grid-cols-2 gap-4 pt-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setShowAdminPrompt(false);
+                                                setAdminCode('');
+                                            }}
+                                            className="p-3 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+                                        >
+                                            Cancelar
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            className="p-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-medium shadow-lg shadow-purple-500/20 transition-all hover:scale-105"
+                                        >
+                                            Ingresar
+                                        </button>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShowRecovery(true);
+                                            setRecoveryError(null);
+                                            setRecoveredAdminCode(null);
+                                            setRecoveryPublicCode('');
+                                        }}
+                                        className="w-full text-center text-sm text-gray-500 hover:text-purple-400 transition-colors mt-4"
+                                    >
+                                        ¿Olvidaste tu código?
+                                    </button>
+                                </form>
+                            </>
+                        ) : (
+                            <>
+                                <h3 className="text-2xl font-bold text-white mb-2">Recuperar Código</h3>
+                                <p className="text-gray-400 mb-6">Ingresa el código PÚBLICO de la sala para recuperar el de admin.</p>
+
+                                <div className="space-y-4">
+                                    {!recoveredAdminCode ? (
+                                        <>
+                                            <input
+                                                type="text"
+                                                value={recoveryPublicCode}
+                                                onChange={(e) => setRecoveryPublicCode(e.target.value.toUpperCase())}
+                                                placeholder="CÓDIGO PÚBLICO"
+                                                className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white text-center text-2xl font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500/50 uppercase"
+                                                autoFocus
+                                            />
+                                            {recoveryError && <p className="text-red-400 text-sm text-center">{recoveryError}</p>}
+                                            <button
+                                                onClick={() => {
+                                                    const game = activeGames.find(g => g.code === recoveryPublicCode);
+                                                    if (!game) {
+                                                        setRecoveryError("Sala no encontrada");
+                                                        return;
+                                                    }
+                                                    // Check permissions
+                                                    const isSuperAdmin = user?.email === 'darwin47@elprivado.app';
+                                                    const isCreator = user && game.createdBy === user.uid;
+
+                                                    if (isSuperAdmin || isCreator) {
+                                                        setRecoveredAdminCode(game.adminCode);
+                                                        setRecoveryError(null);
+                                                    } else {
+                                                        setRecoveryError("No tienes permisos para recuperar este código");
+                                                    }
+                                                }}
+                                                disabled={!recoveryPublicCode.trim()}
+                                                className="w-full p-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium shadow-lg shadow-blue-500/20 transition-all disabled:opacity-50"
+                                            >
+                                                Recuperar
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <div className="text-center space-y-4 animate-in fade-in zoom-in">
+                                            <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+                                                <p className="text-sm text-green-400 mb-1">Tu código de Admin es:</p>
+                                                <p className="text-3xl font-mono font-bold text-white tracking-widest select-all">{recoveredAdminCode}</p>
+                                            </div>
+                                            <button
+                                                onClick={() => {
+                                                    setAdminCode(recoveredAdminCode);
+                                                    setShowRecovery(false);
+                                                    setRecoveredAdminCode(null);
+                                                }}
+                                                className="w-full p-3 rounded-xl bg-green-600 hover:bg-green-500 text-white font-medium shadow-lg shadow-green-500/20 transition-all"
+                                            >
+                                                Usar este código
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowRecovery(false)}
+                                        className="w-full p-3 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+                                    >
+                                        Volver
+                                    </button>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             )}
@@ -175,9 +264,17 @@ export function RecochoApp({ onBackToHub }: RecochoAppProps) {
                             activeGames={activeGames}
                             myGames={myGames}
                             onBack={() => setView('landing')}
-                            onJoinGame={async (code) => {
-                                const { success } = await joinGame(code);
-                                if (success) setView('room');
+                            onJoinGame={async (code, name, phone) => {
+                                const { success, game } = await joinGame(code);
+                                if (success && game) {
+                                    // Auto-assign team (smaller team)
+                                    const teamA = game.players.filter(p => p.team === 'A').length;
+                                    const teamB = game.players.filter(p => p.team === 'B').length;
+                                    const assignedTeam = teamA <= teamB ? 'A' : 'B';
+
+                                    await addPlayer(game.id, name, assignedTeam, phone, 'suggested');
+                                    setView('room');
+                                }
                                 return success;
                             }}
                         />
@@ -186,7 +283,7 @@ export function RecochoApp({ onBackToHub }: RecochoAppProps) {
                     {view === 'room' && currentGame && (
                         <GameRoom
                             game={currentGame}
-                            onAddPlayer={(name, team) => addPlayer(currentGame.id, name, team)}
+                            onAddPlayer={(name, team, phone, status) => addPlayer(currentGame.id, name, team, phone, status)}
                             onRemovePlayer={(playerId) => removePlayer(currentGame.id, playerId)}
                             onUpdatePrice={(price) => updatePitchPrice(currentGame.id, price)}
                             onDelete={async () => {

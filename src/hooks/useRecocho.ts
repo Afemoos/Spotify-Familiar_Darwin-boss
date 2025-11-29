@@ -203,7 +203,7 @@ export function useRecocho() {
         }
     };
 
-    const addPlayer = async (gameId: string, name: string, team: 'A' | 'B') => {
+    const addPlayer = async (gameId: string, name: string, team: 'A' | 'B', phoneNumber?: string, status: 'confirmed' | 'suggested' = 'confirmed') => {
         if (!currentGame) return;
 
         try {
@@ -212,7 +212,9 @@ export function useRecocho() {
                 name,
                 isGuest: !user,
                 team,
-                addedAt: Date.now()
+                addedAt: Date.now(),
+                phoneNumber,
+                status
             };
 
             const updatedPlayers = [...currentGame.players, newPlayer];

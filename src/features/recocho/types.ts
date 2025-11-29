@@ -4,6 +4,8 @@ export interface RecochoPlayer {
     isGuest: boolean;
     team: 'A' | 'B';
     addedAt: number;
+    phoneNumber?: string;
+    status: 'confirmed' | 'suggested';
 }
 
 export interface RecochoGame {

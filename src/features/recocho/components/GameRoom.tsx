@@ -4,7 +4,7 @@ import { RecochoGame } from '../types';
 
 interface GameRoomProps {
     game: RecochoGame;
-    onAddPlayer: (name: string, team: 'A' | 'B') => Promise<void>;
+    onAddPlayer: (name: string, team: 'A' | 'B', phoneNumber?: string, status?: 'confirmed' | 'suggested') => Promise<void>;
     onRemovePlayer: (playerId: string) => Promise<void>;
     onUpdatePrice: (price: number) => Promise<void>;
     onDelete: () => Promise<void>;
@@ -14,6 +14,7 @@ interface GameRoomProps {
 
 export function GameRoom({ game, onAddPlayer, onRemovePlayer, onUpdatePrice, onDelete, onLeave, isOwner }: GameRoomProps) {
     const [newPlayerName, setNewPlayerName] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState(''); // For guests
     const [selectedTeam, setSelectedTeam] = useState<'A' | 'B'>('A');
     const [isEditingPrice, setIsEditingPrice] = useState(false);
     const [tempPrice, setTempPrice] = useState(game.pitchPrice.toString());
@@ -29,6 +30,12 @@ export function GameRoom({ game, onAddPlayer, onRemovePlayer, onUpdatePrice, onD
         e.preventDefault();
         if (!newPlayerName.trim()) return;
 
+        // If guest, require phone number
+        if (!isOwner && !phoneNumber.trim()) {
+            alert('Debes ingresar tu número de celular para sugerir un jugador');
+            return;
+        }
+
         // Check if team is full
         const currentTeamSize = selectedTeam === 'A' ? teamA.length : teamB.length;
         if (currentTeamSize >= game.teamSize) {
@@ -36,8 +43,14 @@ export function GameRoom({ game, onAddPlayer, onRemovePlayer, onUpdatePrice, onD
             return;
         }
 
-        await onAddPlayer(newPlayerName, selectedTeam);
+        await onAddPlayer(
+            newPlayerName,
+            selectedTeam,
+            isOwner ? undefined : phoneNumber,
+            isOwner ? 'confirmed' : 'suggested'
+        );
         setNewPlayerName('');
+        setPhoneNumber('');
     };
 
     const handlePriceUpdate = async () => {
@@ -171,7 +184,19 @@ export function GameRoom({ game, onAddPlayer, onRemovePlayer, onUpdatePrice, onD
                     <div className="p-4 space-y-2">
                         {teamA.map((player) => (
                             <div key={player.id} className="flex items-center justify-between p-3 bg-black/20 rounded-xl border border-white/5 group">
-                                <span className="font-medium text-white">{player.name}</span>
+                                <div className="flex flex-col">
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium text-white">{player.name}</span>
+                                        {player.status === 'suggested' && (
+                                            <span className="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded border border-blue-500/30 uppercase tracking-wide">
+                                                Sugerido
+                                            </span>
+                                        )}
+                                    </div>
+                                    {isOwner && player.phoneNumber && (
+                                        <span className="text-xs text-gray-500">{player.phoneNumber}</span>
+                                    )}
+                                </div>
                                 {isOwner && (
                                     <button
                                         onClick={() => onRemovePlayer(player.id)}
@@ -217,13 +242,27 @@ export function GameRoom({ game, onAddPlayer, onRemovePlayer, onUpdatePrice, onD
                     <div className="p-4 space-y-2">
                         {teamB.map((player) => (
                             <div key={player.id} className="flex items-center justify-between p-3 bg-black/20 rounded-xl border border-white/5 group">
-                                <span className="font-medium text-white">{player.name}</span>
-                                <button
-                                    onClick={() => onRemovePlayer(player.id)}
-                                    className="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
+                                <div className="flex flex-col">
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium text-white">{player.name}</span>
+                                        {player.status === 'suggested' && (
+                                            <span className="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded border border-blue-500/30 uppercase tracking-wide">
+                                                Sugerido
+                                            </span>
+                                        )}
+                                    </div>
+                                    {isOwner && player.phoneNumber && (
+                                        <span className="text-xs text-gray-500">{player.phoneNumber}</span>
+                                    )}
+                                </div>
+                                {isOwner && (
+                                    <button
+                                        onClick={() => onRemovePlayer(player.id)}
+                                        className="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                )}
                             </div>
                         ))}
                         {teamB.length < game.teamSize && (
@@ -240,21 +279,34 @@ export function GameRoom({ game, onAddPlayer, onRemovePlayer, onUpdatePrice, onD
 
             {/* Add Player Input (Sticky Bottom) */}
             <div className="fixed bottom-0 left-0 right-0 p-4 pb-6 md:pb-4 bg-gray-900/95 backdrop-blur-xl border-t border-white/10 z-20 safe-area-bottom">
-                <form onSubmit={handleAddPlayer} className="max-w-md mx-auto flex gap-2">
-                    <input
-                        type="text"
-                        value={newPlayerName}
-                        onChange={(e) => setNewPlayerName(e.target.value)}
-                        placeholder={`Jugador para Equipo ${selectedTeam}`}
-                        className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500/50 text-base" // text-base prevents iOS zoom
-                    />
-                    <button
-                        type="submit"
-                        disabled={!newPlayerName.trim()}
-                        className="bg-green-600 hover:bg-green-500 text-white px-4 md:px-6 py-3 rounded-xl font-bold transition-colors disabled:opacity-50"
-                    >
-                        <Plus className="w-6 h-6" />
-                    </button>
+                <form onSubmit={handleAddPlayer} className="max-w-md mx-auto flex flex-col gap-3">
+                    <div className="flex gap-2">
+                        <input
+                            type="text"
+                            value={newPlayerName}
+                            onChange={(e) => setNewPlayerName(e.target.value)}
+                            placeholder={`Jugador para Equipo ${selectedTeam}`}
+                            className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500/50 text-base"
+                        />
+                        <button
+                            type="submit"
+                            disabled={!newPlayerName.trim() || (!isOwner && !phoneNumber.trim())}
+                            className={`px-4 md:px-6 py-3 rounded-xl font-bold transition-colors disabled:opacity-50 flex items-center gap-2 ${isOwner ? 'bg-green-600 hover:bg-green-500 text-white' : 'bg-blue-600 hover:bg-blue-500 text-white'}`}
+                        >
+                            <Plus className="w-6 h-6" />
+                            <span className="hidden md:inline">{isOwner ? 'Agregar' : 'Sugerir'}</span>
+                        </button>
+                    </div>
+
+                    {!isOwner && (
+                        <input
+                            type="tel"
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                            placeholder="Número de celular (Requerido para sugerir)"
+                            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-base animate-in fade-in slide-in-from-bottom-2"
+                        />
+                    )}
                 </form>
             </div>
         </div>
