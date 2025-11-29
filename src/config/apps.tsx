@@ -38,5 +38,12 @@ export const apps: AppConfig[] = [
         description: 'Planificador de rutinas de gimnasio',
         icon: Dumbbell,
         component: GymApp
+    },
+    {
+        id: 'recocho',
+        name: 'Recocho',
+        description: 'Organizador de partidos de fútbol',
+        icon: ({ className }) => <span className={`text-2xl ${className}`}>⚽</span>,
+        component: lazy(() => import('../features/recocho/RecochoApp'))
     }
 ];

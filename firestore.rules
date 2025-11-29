@@ -79,6 +79,12 @@ service cloud.firestore {
     match /gym_routines/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+
+    // Reglas para Recochos (App 3)
+    // Acceso público total requerido por diseño ("no necesitaras tener cuenta")
+    match /recochos/{gameId} {
+      allow read, write: if true;
+    }
     
     // Bloquear todo lo demás por defecto
     match /{document=**} {

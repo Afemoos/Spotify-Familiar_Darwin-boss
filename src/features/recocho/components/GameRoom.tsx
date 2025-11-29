@@ -1,0 +1,242 @@
+import { useState } from 'react';
+import { Share2, Trash2, Plus, ArrowLeft } from 'lucide-react';
+import { RecochoGame } from '../types';
+
+interface GameRoomProps {
+    game: RecochoGame;
+    onAddPlayer: (name: string, team: 'A' | 'B') => Promise<void>;
+    onRemovePlayer: (playerId: string) => Promise<void>;
+    onUpdatePrice: (price: number) => Promise<void>;
+    onDelete: () => Promise<void>;
+    onLeave: () => void;
+    currentUserId?: string;
+}
+
+export function GameRoom({ game, onAddPlayer, onRemovePlayer, onUpdatePrice, onDelete, onLeave, currentUserId }: GameRoomProps) {
+    const [newPlayerName, setNewPlayerName] = useState('');
+    const [selectedTeam, setSelectedTeam] = useState<'A' | 'B'>('A');
+    const [isEditingPrice, setIsEditingPrice] = useState(false);
+    const [tempPrice, setTempPrice] = useState(game.pitchPrice.toString());
+
+    const teamA = game.players.filter(p => p.team === 'A');
+    const teamB = game.players.filter(p => p.team === 'B');
+
+    const pricePerTeam = game.pitchPrice / 2;
+    const pricePerPlayerA = teamA.length > 0 ? pricePerTeam / teamA.length : 0;
+    const pricePerPlayerB = teamB.length > 0 ? pricePerTeam / teamB.length : 0;
+
+    const handleAddPlayer = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newPlayerName.trim()) return;
+
+        // Check if team is full
+        const currentTeamSize = selectedTeam === 'A' ? teamA.length : teamB.length;
+        if (currentTeamSize >= game.teamSize) {
+            alert('Equipo lleno');
+            return;
+        }
+
+        await onAddPlayer(newPlayerName, selectedTeam);
+        setNewPlayerName('');
+    };
+
+    const handlePriceUpdate = async () => {
+        const price = parseFloat(tempPrice) || 0;
+        await onUpdatePrice(price);
+        setIsEditingPrice(false);
+    };
+
+    const shareOnWhatsApp = () => {
+        const message = `⚽ *Nuevo Recocho*\n\nCódigo de sala: *${game.code}*\nFormato: ${game.teamSize} vs ${game.teamSize}\n\nÚnete aquí para jugar!`;
+        const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
+    };
+
+    return (
+        <div className="w-full max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-5 duration-500 pb-20">
+            {/* Header */}
+            <div className="flex flex-col gap-6 mb-8 bg-white/5 p-4 md:p-6 rounded-3xl border border-white/10">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                        <button onClick={onLeave} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
+                            <ArrowLeft className="w-6 h-6" />
+                        </button>
+                        <div>
+                            <h2 className="text-xl md:text-2xl font-bold text-white">Sala de Juego</h2>
+                            <div className="flex items-center gap-2 text-green-400 font-mono font-bold text-lg md:text-xl">
+                                <span>Código:</span>
+                                <span className="bg-green-500/20 px-3 py-1 rounded-lg border border-green-500/30 select-all">
+                                    {game.code}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between md:justify-end gap-4 border-t md:border-t-0 border-white/10 pt-4 md:pt-0">
+                        <div className="text-right">
+                            <p className="text-xs md:text-sm text-gray-400">Precio Cancha</p>
+                            {isEditingPrice ? (
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="number"
+                                        value={tempPrice}
+                                        onChange={(e) => setTempPrice(e.target.value)}
+                                        className="w-24 bg-black/20 border border-white/10 rounded-lg px-2 py-1 text-white text-right"
+                                        autoFocus
+                                    />
+                                    <button onClick={handlePriceUpdate} className="text-green-400 hover:text-green-300">
+                                        <Plus className="w-5 h-5 rotate-45" /> {/* Check icon replacement */}
+                                    </button>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => setIsEditingPrice(true)}
+                                    className="text-xl md:text-2xl font-bold text-white hover:text-green-400 transition-colors"
+                                >
+                                    ${game.pitchPrice.toLocaleString()}
+                                </button>
+                            )}
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={shareOnWhatsApp}
+                                className="p-3 bg-green-600 hover:bg-green-500 rounded-xl text-white shadow-lg shadow-green-500/20 transition-all hover:scale-105"
+                                title="Compartir en WhatsApp"
+                            >
+                                <Share2 className="w-5 h-5 md:w-6 md:h-6" />
+                            </button>
+
+                            {/* Only show delete if creator (or if guest created it, anyone can delete for now as we don't track guest session ID strictly yet) 
+                                Actually, let's allow anyone to delete if it's a guest game, or only owner if auth.
+                            */}
+                            {(game.createdBy === currentUserId || game.createdBy === 'Guest' || !currentUserId) && (
+                                <button
+                                    onClick={() => {
+                                        if (confirm('¿Estás seguro de finalizar este partido? Se eliminará la sala.')) {
+                                            onDelete();
+                                        }
+                                    }}
+                                    className="p-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-xl text-red-400 transition-all hover:scale-105"
+                                    title="Finalizar Partido"
+                                >
+                                    <Trash2 className="w-5 h-5 md:w-6 md:h-6" />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Teams Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Team A */}
+                <div className="bg-white/5 border border-white/10 rounded-3xl overflow-hidden">
+                    <div className="p-6 bg-gradient-to-b from-blue-600/20 to-transparent border-b border-white/5">
+                        <div className="flex justify-between items-center mb-2">
+                            <h3 className="text-xl font-bold text-blue-400">Equipo A</h3>
+                            <span className="text-sm bg-blue-500/20 px-2 py-1 rounded-lg border border-blue-500/30 text-blue-300">
+                                {teamA.length} / {game.teamSize}
+                            </span>
+                        </div>
+                        <div className="flex justify-between items-end">
+                            <div>
+                                <p className="text-sm text-gray-400">Total Equipo</p>
+                                <p className="text-lg font-bold text-white">${pricePerTeam.toLocaleString()}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-sm text-gray-400">Por Jugador</p>
+                                <p className="text-xl font-bold text-blue-400">${Math.ceil(pricePerPlayerA).toLocaleString()}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="p-4 space-y-2">
+                        {teamA.map((player) => (
+                            <div key={player.id} className="flex items-center justify-between p-3 bg-black/20 rounded-xl border border-white/5 group">
+                                <span className="font-medium text-white">{player.name}</span>
+                                <button
+                                    onClick={() => onRemovePlayer(player.id)}
+                                    className="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
+                        ))}
+                        {teamA.length < game.teamSize && (
+                            <button
+                                onClick={() => setSelectedTeam('A')}
+                                className={`w-full p-3 rounded-xl border border-dashed border-white/20 text-gray-400 hover:text-white hover:border-white/40 transition-all flex items-center justify-center gap-2 ${selectedTeam === 'A' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' : ''}`}
+                            >
+                                <Plus className="w-4 h-4" /> Agregar Jugador
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Team B */}
+                <div className="bg-white/5 border border-white/10 rounded-3xl overflow-hidden">
+                    <div className="p-6 bg-gradient-to-b from-red-600/20 to-transparent border-b border-white/5">
+                        <div className="flex justify-between items-center mb-2">
+                            <h3 className="text-xl font-bold text-red-400">Equipo B</h3>
+                            <span className="text-sm bg-red-500/20 px-2 py-1 rounded-lg border border-red-500/30 text-red-300">
+                                {teamB.length} / {game.teamSize}
+                            </span>
+                        </div>
+                        <div className="flex justify-between items-end">
+                            <div>
+                                <p className="text-sm text-gray-400">Total Equipo</p>
+                                <p className="text-lg font-bold text-white">${pricePerTeam.toLocaleString()}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-sm text-gray-400">Por Jugador</p>
+                                <p className="text-xl font-bold text-red-400">${Math.ceil(pricePerPlayerB).toLocaleString()}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="p-4 space-y-2">
+                        {teamB.map((player) => (
+                            <div key={player.id} className="flex items-center justify-between p-3 bg-black/20 rounded-xl border border-white/5 group">
+                                <span className="font-medium text-white">{player.name}</span>
+                                <button
+                                    onClick={() => onRemovePlayer(player.id)}
+                                    className="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
+                        ))}
+                        {teamB.length < game.teamSize && (
+                            <button
+                                onClick={() => setSelectedTeam('B')}
+                                className={`w-full p-3 rounded-xl border border-dashed border-white/20 text-gray-400 hover:text-white hover:border-white/40 transition-all flex items-center justify-center gap-2 ${selectedTeam === 'B' ? 'bg-red-500/10 border-red-500/30 text-red-400' : ''}`}
+                            >
+                                <Plus className="w-4 h-4" /> Agregar Jugador
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Add Player Input (Sticky Bottom) */}
+            <div className="fixed bottom-0 left-0 right-0 p-4 pb-6 md:pb-4 bg-gray-900/95 backdrop-blur-xl border-t border-white/10 z-20 safe-area-bottom">
+                <form onSubmit={handleAddPlayer} className="max-w-md mx-auto flex gap-2">
+                    <input
+                        type="text"
+                        value={newPlayerName}
+                        onChange={(e) => setNewPlayerName(e.target.value)}
+                        placeholder={`Jugador para Equipo ${selectedTeam}`}
+                        className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500/50 text-base" // text-base prevents iOS zoom
+                    />
+                    <button
+                        type="submit"
+                        disabled={!newPlayerName.trim()}
+                        className="bg-green-600 hover:bg-green-500 text-white px-4 md:px-6 py-3 rounded-xl font-bold transition-colors disabled:opacity-50"
+                    >
+                        <Plus className="w-6 h-6" />
+                    </button>
+                </form>
+            </div>
+        </div>
+    );
+}
