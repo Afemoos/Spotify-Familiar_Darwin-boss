@@ -151,7 +151,7 @@ export function useRecocho() {
         }
     };
 
-    const joinGame = async (code: string): Promise<{ success: boolean, isAdmin: boolean }> => {
+    const joinGame = async (code: string): Promise<{ success: boolean, isAdmin: boolean, game?: RecochoGame }> => {
         setLoading(true);
         setError(null);
         try {
@@ -193,7 +193,7 @@ export function useRecocho() {
             }
 
             setCurrentGame(gameData);
-            return { success: true, isAdmin };
+            return { success: true, isAdmin, game: gameData };
         } catch (err) {
             console.error("Error joining game:", err);
             setError("Error al unirse a la sala");

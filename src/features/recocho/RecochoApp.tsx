@@ -41,6 +41,7 @@ export function RecochoApp({ onBackToHub }: RecochoAppProps) {
         setIsCreating(false);
 
         if (result) {
+            setAdminGameId(result.id); // Grant admin rights immediately
             setView('room'); // Go directly to room on create
         }
     };
@@ -61,10 +62,10 @@ export function RecochoApp({ onBackToHub }: RecochoAppProps) {
         e.preventDefault();
         if (!adminCode.trim()) return;
 
-        const { success, isAdmin } = await joinGame(adminCode);
-        if (success && currentGame) {
+        const { success, isAdmin, game } = await joinGame(adminCode);
+        if (success && game) {
             if (isAdmin) {
-                setAdminGameId(currentGame.id);
+                setAdminGameId(game.id);
             }
             setShowAdminPrompt(false);
             setAdminCode('');
@@ -129,6 +130,7 @@ export function RecochoApp({ onBackToHub }: RecochoAppProps) {
                             if (view === 'landing') {
                                 onBackToHub();
                             } else {
+                                setCurrentGame(null); // Clear current game to prevent auto-redirect
                                 setView('landing');
                                 setAdminGameId(null); // Clear admin session on back to landing
                             }
@@ -194,7 +196,6 @@ export function RecochoApp({ onBackToHub }: RecochoAppProps) {
                             onLeave={handleLeaveRoom}
                             isOwner={
                                 (user && currentGame.createdBy === user.uid) ||
-                                localStorage.getItem(`recocho_owner_${currentGame.id}`) === 'true' ||
                                 adminGameId === currentGame.id
                             }
                         />

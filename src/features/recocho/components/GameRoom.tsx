@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Share2, Trash2, Plus, Edit2, Settings } from 'lucide-react';
+import { ArrowLeft, Share2, Trash2, Plus, Edit2, Settings, Check, X } from 'lucide-react';
 import { RecochoGame } from '../types';
 
 interface GameRoomProps {
@@ -89,14 +89,23 @@ export function GameRoom({ game, onAddPlayer, onRemovePlayer, onUpdatePrice, onD
                             {isEditingPrice ? (
                                 <div className="flex items-center gap-2">
                                     <input
-                                        type="number"
+                                        type="text"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
                                         value={tempPrice}
-                                        onChange={(e) => setTempPrice(e.target.value)}
+                                        onChange={(e) => setTempPrice(e.target.value.replace(/\D/g, ''))}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') handlePriceUpdate();
+                                            if (e.key === 'Escape') setIsEditingPrice(false);
+                                        }}
                                         className="w-24 bg-black/20 border border-white/10 rounded-lg px-2 py-1 text-white text-right"
                                         autoFocus
                                     />
-                                    <button onClick={handlePriceUpdate} className="text-green-400 hover:text-green-300">
-                                        <Plus className="w-5 h-5 rotate-45" /> {/* Check icon replacement */}
+                                    <button onClick={handlePriceUpdate} className="p-1 hover:bg-green-500/20 rounded-lg text-green-400 transition-colors" title="Guardar">
+                                        <Check className="w-4 h-4" />
+                                    </button>
+                                    <button onClick={() => setIsEditingPrice(false)} className="p-1 hover:bg-red-500/20 rounded-lg text-red-400 transition-colors" title="Cancelar">
+                                        <X className="w-4 h-4" />
                                     </button>
                                 </div>
                             ) : (
