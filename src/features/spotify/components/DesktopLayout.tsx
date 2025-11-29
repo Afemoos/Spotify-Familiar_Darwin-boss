@@ -93,7 +93,7 @@ export function DesktopLayout({
                     <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                         <p className="text-sm text-gray-400 mb-1">Usuario</p>
                         <p className="font-medium text-white truncate capitalize">
-                            {members.find(m => m.userId === user?.uid)?.name || user?.email?.split('@')[0] || (isGuest ? 'Visitante' : 'Admin')}
+                            {isGuest ? 'Visitante' : (members.find(m => m.userId === user?.uid)?.name || user?.email?.split('@')[0] || 'Admin')}
                         </p>
                     </div>
                 </div>
