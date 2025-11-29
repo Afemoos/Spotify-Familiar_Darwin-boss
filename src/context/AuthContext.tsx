@@ -6,7 +6,9 @@ import {
     signOut,
     onAuthStateChanged,
     sendPasswordResetEmail,
-    AuthError
+    AuthError,
+    setPersistence,
+    browserSessionPersistence
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
 
@@ -41,12 +43,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            setUser(currentUser);
-            setLoading(false);
-        });
+        // Set persistence to SESSION (clears when tab/window is closed)
+        setPersistence(auth, browserSessionPersistence)
+            .then(() => {
+                const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+                    setUser(currentUser);
+                    setLoading(false);
+                });
+                return unsubscribe;
+            })
+            .catch((error) => {
+                console.error("Auth persistence error:", error);
+                setLoading(false);
+            });
 
-        return unsubscribe;
+        // Return cleanup function (though setPersistence is a promise, the listener is what matters)
+        return () => { };
     }, []);
 
     const clearError = () => setError(null);
