@@ -1,4 +1,3 @@
-```javascript
 import { useState } from 'react';
 import { collection, getDocs, doc, writeBatch, setDoc, getDoc } from 'firebase/firestore';
 import { db, APP_ID } from '../../../config/firebase';
@@ -56,7 +55,7 @@ export function MigrationTool() {
             setStatus('Migration completed successfully!');
         } catch (error) {
             console.error(error);
-            setStatus(`Error: ${ error } `);
+            setStatus(`Error: ${error}`);
         } finally {
             setIsMigrating(false);
         }
@@ -70,7 +69,7 @@ export function MigrationTool() {
             const legacyGroupId = 'darwin-legacy';
             const membersRef = collection(db, 'groups', legacyGroupId, 'members');
             const snapshot = await getDocs(membersRef);
-            
+
             const memberUids: string[] = [];
             snapshot.docs.forEach(doc => {
                 const data = doc.data();
@@ -102,7 +101,7 @@ export function MigrationTool() {
             });
 
             await batch.commit();
-            setStatus(`Sincronización completada.${ memberUids.length } miembros actualizados.Código: ${ inviteCode } `);
+            setStatus(`Sincronización completada. ${memberUids.length} miembros actualizados. Código: ${inviteCode}`);
         } catch (error) {
             console.error(error);
             setStatus('Error en sincronización: ' + error);
@@ -123,7 +122,7 @@ export function MigrationTool() {
                     >
                         {isMigrating ? 'Migrating...' : 'Run Migration (Legacy -> Groups)'}
                     </button>
-                    
+
                     <button
                         onClick={syncAccess}
                         disabled={isSyncing}
@@ -141,4 +140,3 @@ export function MigrationTool() {
         </div>
     );
 }
-```
