@@ -61,6 +61,13 @@ export function Lobby({ onSelectApp, onNavigateToAuth }: LobbyProps) {
         const member = members.find(m => m.name.toLowerCase() === userName.toLowerCase());
         if (!member) return { status: 'unknown', message: 'No vinculado' };
 
+        if (member.isExempt) {
+            return {
+                status: 'vip',
+                message: 'VIP'
+            };
+        }
+
         const date = new Date();
         const key = `${member.id}_${date.getFullYear()}-${date.getMonth() + 1}`;
         const isPaid = !!payments[key];
@@ -146,7 +153,11 @@ export function Lobby({ onSelectApp, onNavigateToAuth }: LobbyProps) {
                                         <span className="w-2 h-2 rounded-full bg-green-500"></span>
                                         Spotify Familiar
                                     </h3>
-                                    {spotifyStatus?.status === 'paid' ? (
+                                    {spotifyStatus?.status === 'vip' ? (
+                                        <span className="text-xs font-bold bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded-lg border border-yellow-500/20">
+                                            VIP
+                                        </span>
+                                    ) : spotifyStatus?.status === 'paid' ? (
                                         <span className="text-xs font-bold bg-green-500/20 text-green-400 px-2 py-1 rounded-lg border border-green-500/20">
                                             AL DÍA
                                         </span>
