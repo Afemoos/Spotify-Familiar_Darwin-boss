@@ -47,7 +47,7 @@ export function PaymentList({ members, payments, currentDate, onChangeMonth, onM
             <div className="grid gap-4">
                 {members.length === 0 && <div className="text-center py-10 opacity-60"><Users className="w-12 h-12 mx-auto mb-2 text-gray-500" /><p className="text-gray-400">Agrega integrantes en Gestión</p></div>}
 
-                {members.filter(m => m.name !== 'Moreno').map(member => {
+                {members.filter(m => !m.isExempt).map(member => {
                     const key = getPaymentKey(member.id);
                     const isPaid = !!payments[key];
                     const isConfirmingUndo = paymentToUndo === member.id;

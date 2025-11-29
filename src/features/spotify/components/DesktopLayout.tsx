@@ -26,6 +26,7 @@ interface DesktopLayoutProps {
     requests: Request[];
     onAcceptRequest: (request: Request) => Promise<void>;
     onRejectRequest: (requestId: string) => Promise<void>;
+    onToggleExempt: (id: string, isExempt: boolean) => Promise<void>;
 }
 
 export function DesktopLayout({
@@ -46,7 +47,8 @@ export function DesktopLayout({
     onLogout,
     requests,
     onAcceptRequest,
-    onRejectRequest
+    onRejectRequest,
+    onToggleExempt
 }: DesktopLayoutProps) {
     return (
         <div className="flex h-screen bg-gradient-to-br from-black to-gray-900 font-sans text-white overflow-hidden">
@@ -90,7 +92,9 @@ export function DesktopLayout({
                 <div className="p-4 border-t border-white/10">
                     <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                         <p className="text-sm text-gray-400 mb-1">Usuario</p>
-                        <p className="font-medium text-white truncate capitalize">{user?.email?.split('@')[0] || (isGuest ? 'Visitante' : 'Admin')}</p>
+                        <p className="font-medium text-white truncate capitalize">
+                            {members.find(m => m.userId === user?.uid)?.name || user?.email?.split('@')[0] || (isGuest ? 'Visitante' : 'Admin')}
+                        </p>
                     </div>
                 </div>
             </aside>
@@ -114,6 +118,7 @@ export function DesktopLayout({
                                     members={members}
                                     onAddMember={addMember}
                                     onRemoveMember={removeMember}
+                                    onToggleExempt={onToggleExempt}
                                 />
                             </div>
                         )}

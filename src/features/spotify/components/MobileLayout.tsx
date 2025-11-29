@@ -26,6 +26,7 @@ interface MobileLayoutProps {
     requests?: Request[];
     onAcceptRequest?: (request: Request) => Promise<void>;
     onRejectRequest?: (requestId: string) => Promise<void>;
+    onToggleExempt: (id: string, isExempt: boolean) => Promise<void>;
 }
 
 export function MobileLayout({
@@ -46,7 +47,8 @@ export function MobileLayout({
     onLogout,
     requests,
     onAcceptRequest,
-    onRejectRequest
+    onRejectRequest,
+    onToggleExempt
 }: MobileLayoutProps) {
     return (
         <div className="max-w-md mx-auto h-[100dvh] flex flex-col bg-gradient-to-br from-gray-900 to-gray-800 font-sans relative overflow-hidden text-white">
@@ -65,6 +67,7 @@ export function MobileLayout({
                         members={members}
                         onAddMember={addMember}
                         onRemoveMember={removeMember}
+                        onToggleExempt={onToggleExempt}
                     />
                 )}
 

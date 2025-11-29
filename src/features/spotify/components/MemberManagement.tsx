@@ -7,9 +7,10 @@ interface MemberManagementProps {
     members: Member[];
     onAddMember: (name: string) => Promise<void>;
     onRemoveMember: (id: string) => Promise<void>;
+    onToggleExempt: (id: string, isExempt: boolean) => Promise<void>;
 }
 
-export function MemberManagement({ members, onAddMember, onRemoveMember }: MemberManagementProps) {
+export function MemberManagement({ members, onAddMember, onRemoveMember, onToggleExempt }: MemberManagementProps) {
     const [newMemberName, setNewMemberName] = useState('');
     const [memberToDelete, setMemberToDelete] = useState<string | null>(null);
 
@@ -60,8 +61,24 @@ export function MemberManagement({ members, onAddMember, onRemoveMember }: Membe
                             </div>
                         ) : (
                             <div className="flex justify-between items-center group">
-                                <span className="font-medium text-lg text-gray-200">{member.name}</span>
-                                <button onClick={() => setMemberToDelete(member.id)} className="text-gray-500 hover:text-red-400 p-2 hover:bg-red-500/10 rounded-full transition-colors"><Trash2 className="w-5 h-5" /></button>
+                                <div className="flex items-center gap-3">
+                                    <span className="font-medium text-lg text-gray-200">{member.name}</span>
+                                    {member.isExempt && (
+                                        <span className="text-[10px] uppercase font-bold bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded border border-yellow-500/30">
+                                            Especial
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => onToggleExempt(member.id, !member.isExempt)}
+                                        className={`p-2 rounded-lg transition-colors text-xs font-bold border ${member.isExempt ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/20' : 'bg-gray-800 text-gray-400 border-gray-700 hover:bg-gray-700 hover:text-gray-200'}`}
+                                        title={member.isExempt ? "Quitar estado especial" : "Marcar como miembro especial (no paga)"}
+                                    >
+                                        {member.isExempt ? 'VIP' : 'Normal'}
+                                    </button>
+                                    <button onClick={() => setMemberToDelete(member.id)} className="text-gray-500 hover:text-red-400 p-2 hover:bg-red-500/10 rounded-full transition-colors"><Trash2 className="w-5 h-5" /></button>
+                                </div>
                             </div>
                         )}
                     </div>

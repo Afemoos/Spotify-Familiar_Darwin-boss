@@ -141,6 +141,13 @@ export function useSpotifyData() {
         deleteHistorical,
         requestSpot,
         acceptRequest,
-        rejectRequest
+        rejectRequest,
+        toggleMemberExempt: async (id: string, isExempt: boolean) => {
+            try {
+                const { updateDoc } = await import('firebase/firestore');
+                const docRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'spotify_members', id);
+                await updateDoc(docRef, { isExempt });
+            } catch (e) { console.error(e); throw e; }
+        }
     };
 }

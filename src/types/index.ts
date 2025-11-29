@@ -3,6 +3,7 @@ export interface Member {
     name: string;
     createdAt: number;
     userId?: string;
+    isExempt?: boolean;
 }
 
 export interface PaymentData {

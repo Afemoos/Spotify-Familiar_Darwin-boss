@@ -53,7 +53,7 @@ export function HistoryReport({ members, payments, currentDate, onChangeMonth, o
         });
 
         members.forEach(member => {
-            if (!processedIds.has(member.id)) {
+            if (!processedIds.has(member.id) && !member.isExempt) {
                 rows.push({ id: member.id, key: getPaymentKey(member.id), name: member.name, isPaid: false, date: null, isExMember: false });
             }
         });
