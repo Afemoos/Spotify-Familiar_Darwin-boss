@@ -53,12 +53,9 @@ export function Lobby({ onSelectApp, onNavigateToAuth }: LobbyProps) {
 
     const getSpotifyStatus = () => {
         if (!user) return null;
-        // Try to find member by matching name (case insensitive)
-        // The user.displayName should now be "Darwin" for admin, or the registered name
-        const userName = user.displayName || user.email?.split('@')[0];
-        if (!userName) return null;
-
-        const member = members.find(m => m.name.toLowerCase() === userName.toLowerCase());
+        // Try to find member by userId first, then by name
+        const member = members.find(m => m.userId === user.uid) ||
+            members.find(m => m.name.toLowerCase() === (user.displayName || user.email?.split('@')[0])?.toLowerCase());
         if (!member) return { status: 'unknown', message: 'No vinculado' };
 
         if (member.isExempt) {
