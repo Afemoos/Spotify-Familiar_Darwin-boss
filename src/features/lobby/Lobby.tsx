@@ -33,7 +33,13 @@ export function Lobby({ onSelectApp, onNavigateToAuth }: LobbyProps) {
     const [loadingVisitor, setLoadingVisitor] = useState(false);
 
 
+    const [showVisitorPrompt, setShowVisitorPrompt] = useState(false);
+
     const handleAppClick = (appId: string) => {
+        if (!user && !currentGroup) {
+            setShowVisitorPrompt(true);
+            return;
+        }
         onSelectApp(appId);
     };
 
@@ -131,6 +137,74 @@ export function Lobby({ onSelectApp, onNavigateToAuth }: LobbyProps) {
                     )}
                 </div>
             </div>
+
+            {/* Visitor Code Prompt Modal */}
+            {showVisitorPrompt && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setShowVisitorPrompt(false)}>
+                    <div className="bg-gray-900 border border-white/10 rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-6 relative" onClick={e => e.stopPropagation()}>
+                        <button
+                            onClick={() => setShowVisitorPrompt(false)}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div className="text-center space-y-2">
+                            <h2 className="text-xl font-bold text-white">Acceso de Visitante</h2>
+                            <p className="text-sm text-gray-400">Ingresa el código del grupo para ver la información.</p>
+                        </div>
+
+                        <div className="space-y-4">
+                            <input
+                                type="text"
+                                placeholder="Código (ej. DARWIN)"
+                                value={visitorCode}
+                                onChange={(e) => setVisitorCode(e.target.value.toUpperCase())}
+                                className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white uppercase text-center text-lg tracking-widest"
+                                maxLength={6}
+                                autoFocus
+                            />
+                            <button
+                                onClick={async () => {
+                                    if (visitorCode.length < 6) return;
+                                    setLoadingVisitor(true);
+                                    const success = await loadGroupForVisitor(visitorCode);
+                                    if (success) {
+                                        setShowVisitorPrompt(false);
+                                        // Navigate to the app after successful load
+                                        // Assuming 'spotify' is the app ID we want to open, or we can pass it dynamically if needed.
+                                        // For now, since we only have one main app card logic, we'll assume it's the one clicked.
+                                        // But wait, handleAppClick takes appId. We need to know which app was clicked?
+                                        // Actually, the user clicked an app card to trigger this.
+                                        // Let's just default to 'spotify-familiar' or whatever the ID is.
+                                        // Looking at config/apps.ts would confirm, but usually it's passed.
+                                        // Let's just call onSelectApp with the first app's ID or similar.
+                                        // Better: Just close modal. The state `currentGroup` is now set.
+                                        // The user will see the "Lobby" with the group selected.
+                                        // Then they can click the app again.
+                                        // OR we can auto-navigate.
+                                        // Let's auto-navigate to the first app if possible, or just let them click.
+                                        // Given the flow, simply setting currentGroup updates the UI.
+                                        // If we want to enter the app immediately:
+                                        onSelectApp('spotify-familiar');
+                                    } else {
+                                        alert("Código no encontrado");
+                                    }
+                                    setLoadingVisitor(false);
+                                }}
+                                disabled={loadingVisitor || visitorCode.length < 6}
+                                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-3 rounded-xl font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {loadingVisitor ? (
+                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                    'Ver Grupo'
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* User Info Modal */}
             {showInfoModal && user && (
@@ -260,8 +334,183 @@ export function Lobby({ onSelectApp, onNavigateToAuth }: LobbyProps) {
                 </div>
             )}
 
-            {/* Migration Tool for Darwin */}
-            <MigrationTool />
+            {/* Migration Tool for Darwin - Hidden after migration */}
+            {/* <MigrationTool /> */}
+
+            <div className="flex-1 flex flex-col items-center justify-center p-6 w-full max-w-4xl mx-auto space-y-12 pb-20">
+                <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-5 duration-700">
+                    <h1 className="text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+                        {currentGroup ? currentGroup.name : 'Lobby'}
+                    </h1>
+                    <p className="text-gray-400 text-lg md:text-xl">
+                        {currentGroup ? 'Selecciona una aplicación' : 'Bienvenido a El Privado Apps'}
+                    </p>
+                </div>
+
+                {/* Group Selection / Creation */}
+                {user && !currentGroup && (
+                    <div className="w-full max-w-2xl mx-auto space-y-8">
+                        {/* Create Group */}
+                        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                            <h3 className="text-xl font-bold text-white mb-4">Crear Nuevo Grupo</h3>
+                            <div className="flex gap-4">
+                                <input
+                                    type="text"
+                                    placeholder="Nombre del grupo (ej. Familia Perez)"
+                                    value={newGroupName}
+                                    onChange={(e) => setNewGroupName(e.target.value)}
+                                    className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white"
+                                />
+                                <button
+                                    onClick={async () => {
+                                        if (!newGroupName.trim()) return;
+                                        setIsCreatingGroup(true);
+                                        await createGroup(newGroupName);
+                                        setNewGroupName('');
+                                        setIsCreatingGroup(false);
+                                    }}
+                                    disabled={isCreatingGroup || !newGroupName.trim()}
+                                    className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-xl font-bold transition-colors disabled:opacity-50"
+                                >
+                                    {isCreatingGroup ? 'Creando...' : 'Crear'}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Join by Code */}
+                        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                            <h3 className="text-xl font-bold text-white mb-4">Unirse con Código</h3>
+                            <div className="flex gap-4">
+                                <input
+                                    type="text"
+                                    placeholder="Código de invitación (ej. ABC123)"
+                                    value={joinCode}
+                                    onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                                    className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white uppercase"
+                                    maxLength={6}
+                                />
+                                <button
+                                    onClick={async () => {
+                                        if (!joinCode.trim()) return;
+                                        setIsJoining(true);
+                                        const success = await joinGroupByCode(joinCode);
+                                        if (success) {
+                                            setJoinCode('');
+                                            // Optional: Show success message
+                                        }
+                                        setIsJoining(false);
+                                    }}
+                                    disabled={isJoining || joinCode.length < 6}
+                                    className="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-xl font-bold transition-colors disabled:opacity-50"
+                                >
+                                    {isJoining ? 'Uniéndose...' : 'Unirse'}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* My Groups */}
+                        {groups.length > 0 && (
+                            <div className="space-y-4">
+                                <h3 className="text-xl font-bold text-white">Mis Grupos</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {groups.map(group => (
+                                        <div
+                                            key={group.id}
+                                            onClick={() => selectGroup(group)}
+                                            className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-6 cursor-pointer transition-all group"
+                                        >
+                                            <h4 className="text-lg font-bold text-white group-hover:text-indigo-400 transition-colors">{group.name}</h4>
+                                            <p className="text-gray-400 text-sm">Creado el {new Date(group.createdAt).toLocaleDateString()}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* App Grid - Only show if group selected OR user is visitor (no auth) */}
+                {(!user || currentGroup) && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {apps.filter(app => !app.hidden).map((app) => (
+                            <Card
+                                key={app.id}
+                                onClick={() => handleAppClick(app.id)}
+                                hoverEffect
+                                color="indigo"
+                                className="group relative cursor-pointer flex flex-col gap-6 animate-in zoom-in-95 duration-500 delay-100 text-left"
+                            >
+                                <div className="w-20 h-20 rounded-2xl overflow-hidden border border-indigo-500/30 group-hover:border-indigo-500/50 transition-all shadow-lg shadow-black/50 flex items-center justify-center bg-slate-800">
+                                    <app.icon className="w-10 h-10 text-indigo-500 group-hover:scale-110 transition-transform duration-500" />
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-indigo-400 transition-colors">{app.name}</h3>
+                                    <p className="text-gray-400 text-sm leading-relaxed">
+                                        {app.description}
+                                    </p>
+                                </div>
+                                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-indigo-500/0 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </Card>
+                        ))}
+
+                        {/* Placeholder for future apps */}
+                        <Card className="flex flex-col items-center justify-center gap-4 opacity-50 border-dashed hover:opacity-75 transition-opacity duration-300 animate-pulse">
+                            <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
+                                <span className="text-2xl text-gray-600">+</span>
+                            </div>
+                            <p className="text-gray-500 text-sm font-medium">Próximamente</p>
+                        </Card>
+                    </div>
+                )}
+            </div>
+
+            <footer className="w-full text-center text-gray-600 text-xs py-6">
+                &copy; {new Date().getFullYear()} El Privado Team
+            </footer>
+        </div >
+    );
+
+    {/* Visitor Request for unlinked users */ }
+    {
+        user && !spotifyStatus && !currentGroup && (
+            <div className="w-full max-w-md mx-auto px-6 mt-8 z-20 relative space-y-8">
+                <VisitorRequest onRequestSpot={requestSpot} />
+
+                {/* Visitor Code Access */}
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                    <h3 className="text-lg font-bold text-white mb-4 text-center">¿Tienes un código de invitado?</h3>
+                    <div className="flex gap-2">
+                        <input
+                            type="text"
+                            placeholder="Código (ej. ABC123)"
+                            value={visitorCode}
+                            onChange={(e) => setVisitorCode(e.target.value.toUpperCase())}
+                            className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white uppercase text-center"
+                            maxLength={6}
+                        />
+                        <button
+                            onClick={async () => {
+                                if (visitorCode.length < 6) return;
+                                setLoadingVisitor(true);
+                                const success = await loadGroupForVisitor(visitorCode);
+                                if (!success) {
+                                    alert("Código no encontrado");
+                                }
+                                setLoadingVisitor(false);
+                            }}
+                            disabled={loadingVisitor || visitorCode.length < 6}
+                            className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl font-bold transition-colors disabled:opacity-50"
+                        >
+                            {loadingVisitor ? '...' : 'Ver'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    {/* Migration Tool for Darwin - Hidden after migration */ }
+    {/* <MigrationTool /> */ }
 
             <div className="flex-1 flex flex-col items-center justify-center p-6 w-full max-w-4xl mx-auto space-y-12 pb-20">
                 <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-5 duration-700">
