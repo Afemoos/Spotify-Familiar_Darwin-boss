@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { collection, onSnapshot, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
-import { db, auth, APP_ID } from '../../../config/firebase';
+import { db, auth } from '../../../config/firebase';
 import { Member, PaymentData, Request } from '../../../types';
 
 export function useSpotifyData() {
@@ -21,9 +21,9 @@ export function useSpotifyData() {
     useEffect(() => {
         if (!user) return;
 
-        const membersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'spotify_members');
-        const paymentsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'spotify_payments');
-        const requestsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'spotify_requests');
+        const membersRef = collection(db, 'spotify_members');
+        const paymentsRef = collection(db, 'spotify_payments');
+        const requestsRef = collection(db, 'spotify_requests');
 
         const unsubscribeMembers = onSnapshot(membersRef, (snapshot) => {
             const loadedMembers = snapshot.docs.map(doc => ({
@@ -32,7 +32,10 @@ export function useSpotifyData() {
             })) as Member[];
             setMembers(loadedMembers.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)));
             setIsLoading(false);
-        }, (error) => console.error("Error cargando miembros:", error));
+        }, (error) => {
+            console.error("Error cargando miembros:", error);
+            // alert("Error cargando miembros: " + error.message); // Debugging
+        });
 
         const unsubscribePayments = onSnapshot(paymentsRef, (snapshot) => {
             const loadedPayments: Record<string, PaymentData> = {};
@@ -40,7 +43,9 @@ export function useSpotifyData() {
                 loadedPayments[doc.id] = doc.data() as PaymentData;
             });
             setPayments(loadedPayments);
-        }, (error) => console.error("Error cargando pagos:", error));
+        }, (error) => {
+            console.error("Error cargando pagos:", error);
+        });
 
         const unsubscribeRequests = onSnapshot(requestsRef, (snapshot) => {
             const loadedRequests = snapshot.docs.map(doc => ({
@@ -62,14 +67,14 @@ export function useSpotifyData() {
         const newId = Date.now().toString();
         const newMember = { name: name.trim(), createdAt: Date.now() };
         try {
-            const docRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'spotify_members', newId);
+            const docRef = doc(db, 'spotify_members', newId);
             await setDoc(docRef, newMember);
         } catch (e) { console.error(e); throw e; }
     };
 
     const removeMember = async (id: string) => {
         try {
-            const docRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'spotify_members', id);
+            const docRef = doc(db, 'spotify_members', id);
             await deleteDoc(docRef);
         } catch (e) { console.error(e); throw e; }
     };
@@ -77,21 +82,21 @@ export function useSpotifyData() {
     const markAsPaid = async (member: Member, key: string) => {
         if (!user) return;
         try {
-            const docRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'spotify_payments', key);
+            const docRef = doc(db, 'spotify_payments', key);
             await setDoc(docRef, { date: new Date().toISOString(), name: member.name });
         } catch (e) { console.error(e); throw e; }
     };
 
     const undoPayment = async (key: string) => {
         try {
-            const docRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'spotify_payments', key);
+            const docRef = doc(db, 'spotify_payments', key);
             await deleteDoc(docRef);
         } catch (e) { console.error(e); throw e; }
     };
 
     const deleteHistorical = async (key: string) => {
         try {
-            const docRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'spotify_payments', key);
+            const docRef = doc(db, 'spotify_payments', key);
             await deleteDoc(docRef);
         } catch (e) { console.error(e); throw e; }
     };
@@ -106,7 +111,7 @@ export function useSpotifyData() {
             status: 'pending'
         };
         try {
-            const docRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'spotify_requests', newId);
+            const docRef = doc(db, 'spotify_requests', newId);
             await setDoc(docRef, newRequest);
         } catch (e) { console.error(e); throw e; }
     };
@@ -114,14 +119,14 @@ export function useSpotifyData() {
     const acceptRequest = async (request: Request) => {
         try {
             await addMember(request.name);
-            const docRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'spotify_requests', request.id);
+            const docRef = doc(db, 'spotify_requests', request.id);
             await deleteDoc(docRef);
         } catch (e) { console.error(e); throw e; }
     };
 
     const rejectRequest = async (requestId: string) => {
         try {
-            const docRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'spotify_requests', requestId);
+            const docRef = doc(db, 'spotify_requests', requestId);
             await deleteDoc(docRef);
         } catch (e) { console.error(e); throw e; }
     };

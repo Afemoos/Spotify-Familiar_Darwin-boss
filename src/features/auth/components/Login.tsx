@@ -16,15 +16,19 @@ export function Login({ onNavigate }: LoginProps) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
+        console.log("Attempting login...");
         try {
             let loginEmail = email;
             if (!email.includes('@')) {
                 loginEmail = `${email}@elprivado.app`;
             }
+            console.log("Login email:", loginEmail);
             await signIn(loginEmail, password);
+            console.log("Login successful, navigating...");
             onNavigate('hub');
         } catch (error) {
-            // Error is handled in context
+            console.error("Login failed in component:", error);
+            alert("Error de inicio de sesión: " + (error as any).message);
         } finally {
             setIsSubmitting(false);
         }
