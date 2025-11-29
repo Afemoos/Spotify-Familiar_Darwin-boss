@@ -1,25 +1,22 @@
 import { useState, useEffect } from 'react';
 import { collection, onSnapshot, doc, setDoc, deleteDoc } from 'firebase/firestore';
-import { onAuthStateChanged } from 'firebase/auth';
-import { db, auth, APP_ID } from '../../../config/firebase';
+import { db, APP_ID } from '../../../config/firebase';
 import { Member, PaymentData, Request } from '../../../types';
 
+import { useAuth } from '../../../context/AuthContext';
+
 export function useSpotifyData() {
-    const [user, setUser] = useState<any>(null);
+    const { user } = useAuth();
     const [members, setMembers] = useState<Member[]>([]);
     const [payments, setPayments] = useState<Record<string, PaymentData>>({});
     const [requests, setRequests] = useState<Request[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            setUser(currentUser);
-        });
-        return () => unsubscribe();
-    }, []);
+    // Removed local onAuthStateChanged listener as we use global AuthContext
 
     useEffect(() => {
-        if (!user) return;
+        // Allow fetching even if user is null (visitor mode or mock admin)
+        // if (!user) return;
 
         const membersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'spotify_members');
         const paymentsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'spotify_payments');
