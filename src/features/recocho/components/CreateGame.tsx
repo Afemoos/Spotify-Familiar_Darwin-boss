@@ -5,9 +5,10 @@ interface CreateGameProps {
     onCreate: (teamSize: number, pitchPrice: number) => Promise<void>;
     onCancel: () => void;
     isCreating: boolean;
+    error?: string | null;
 }
 
-export function CreateGame({ onCreate, onCancel, isCreating }: CreateGameProps) {
+export function CreateGame({ onCreate, onCancel, isCreating, error }: CreateGameProps) {
     const [teamSize, setTeamSize] = useState<number>(5);
     const [pitchPrice, setPitchPrice] = useState<string>('');
 
@@ -21,6 +22,12 @@ export function CreateGame({ onCreate, onCancel, isCreating }: CreateGameProps) 
         <div className="w-full max-w-md mx-auto animate-in fade-in slide-in-from-bottom-5 duration-500">
             <div className="bg-white/5 border border-white/10 rounded-3xl p-8">
                 <h2 className="text-2xl font-bold text-white mb-6 text-center">Configurar Recocho</h2>
+
+                {error && (
+                    <div className="bg-red-500/20 border border-red-500/30 text-red-200 px-4 py-3 rounded-xl mb-6 text-sm text-center">
+                        {error}
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="space-y-2">
@@ -58,6 +65,7 @@ export function CreateGame({ onCreate, onCancel, isCreating }: CreateGameProps) 
                             className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white text-lg focus:outline-none focus:ring-2 focus:ring-green-500/50"
                             min="0"
                         />
+                        <p className="text-xs text-gray-400">Deja en 0 si aún no conoces el precio</p>
                     </div>
 
                     <div className="flex gap-4 pt-4">

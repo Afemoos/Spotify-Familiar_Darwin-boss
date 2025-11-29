@@ -128,6 +128,10 @@ export function useRecocho() {
             };
 
             const docRef = await addDoc(collection(db, 'recochos'), newGame);
+
+            // Save ownership locally for guest users
+            localStorage.setItem(`recocho_owner_${docRef.id}`, 'true');
+
             // We don't set currentGame here, the caller (RecochoApp) should handle navigation/joining
             // But to trigger the subscription, we need to set it.
             // Let's set it here so the effect picks it up.

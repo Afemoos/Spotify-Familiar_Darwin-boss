@@ -28,6 +28,12 @@ export function Lobby({ onSelectApp, onNavigateToAuth }: LobbyProps) {
     const [showVisitorPrompt, setShowVisitorPrompt] = useState(false);
 
     const handleAppClick = (appId: string) => {
+        // Recocho is a public app, allow access without auth/group
+        if (appId === 'recocho') {
+            onSelectApp(appId);
+            return;
+        }
+
         if (!user && !currentGroup) {
             setShowVisitorPrompt(true);
             return;

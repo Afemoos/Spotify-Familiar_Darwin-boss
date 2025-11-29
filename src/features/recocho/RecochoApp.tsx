@@ -21,6 +21,7 @@ export function RecochoApp({ onBackToHub }: RecochoAppProps) {
         currentGame,
         createGame,
         joinGame,
+        error,
         addPlayer,
         removePlayer,
         updatePitchPrice,
@@ -77,6 +78,7 @@ export function RecochoApp({ onBackToHub }: RecochoAppProps) {
                         onCreate={handleCreateGame}
                         onCancel={() => setView('landing')}
                         isCreating={isCreating}
+                        error={error}
                     />
                 )}
 
@@ -100,7 +102,10 @@ export function RecochoApp({ onBackToHub }: RecochoAppProps) {
                             setView('landing');
                         }}
                         onLeave={handleLeaveRoom}
-                        currentUserId={user?.uid}
+                        isOwner={
+                            (user && currentGame.createdBy === user.uid) ||
+                            localStorage.getItem(`recocho_owner_${currentGame.id}`) === 'true'
+                        }
                     />
                 )}
             </div>

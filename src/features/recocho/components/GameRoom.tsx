@@ -9,10 +9,10 @@ interface GameRoomProps {
     onUpdatePrice: (price: number) => Promise<void>;
     onDelete: () => Promise<void>;
     onLeave: () => void;
-    currentUserId?: string;
+    isOwner: boolean;
 }
 
-export function GameRoom({ game, onAddPlayer, onRemovePlayer, onUpdatePrice, onDelete, onLeave, currentUserId }: GameRoomProps) {
+export function GameRoom({ game, onAddPlayer, onRemovePlayer, onUpdatePrice, onDelete, onLeave, isOwner }: GameRoomProps) {
     const [newPlayerName, setNewPlayerName] = useState('');
     const [selectedTeam, setSelectedTeam] = useState<'A' | 'B'>('A');
     const [isEditingPrice, setIsEditingPrice] = useState(false);
@@ -90,10 +90,10 @@ export function GameRoom({ game, onAddPlayer, onRemovePlayer, onUpdatePrice, onD
                                 </div>
                             ) : (
                                 <button
-                                    onClick={() => setIsEditingPrice(true)}
-                                    className="text-xl md:text-2xl font-bold text-white hover:text-green-400 transition-colors"
+                                    onClick={() => isOwner && setIsEditingPrice(true)}
+                                    className={`text-xl md:text-2xl font-bold transition-colors ${isOwner ? 'hover:text-green-400 cursor-pointer' : 'cursor-default'} ${game.pitchPrice === 0 ? 'text-yellow-400' : 'text-white'}`}
                                 >
-                                    ${game.pitchPrice.toLocaleString()}
+                                    {game.pitchPrice === 0 ? 'Por definir' : `$${game.pitchPrice.toLocaleString()}`}
                                 </button>
                             )}
                         </div>
@@ -106,10 +106,7 @@ export function GameRoom({ game, onAddPlayer, onRemovePlayer, onUpdatePrice, onD
                                 <Share2 className="w-5 h-5 md:w-6 md:h-6" />
                             </button>
 
-                            {/* Only show delete if creator (or if guest created it, anyone can delete for now as we don't track guest session ID strictly yet) 
-                                Actually, let's allow anyone to delete if it's a guest game, or only owner if auth.
-                            */}
-                            {(game.createdBy === currentUserId || game.createdBy === 'Guest' || !currentUserId) && (
+                            {isOwner && (
                                 <button
                                     onClick={() => {
                                         if (confirm('¿Estás seguro de finalizar este partido? Se eliminará la sala.')) {
@@ -154,12 +151,14 @@ export function GameRoom({ game, onAddPlayer, onRemovePlayer, onUpdatePrice, onD
                         {teamA.map((player) => (
                             <div key={player.id} className="flex items-center justify-between p-3 bg-black/20 rounded-xl border border-white/5 group">
                                 <span className="font-medium text-white">{player.name}</span>
-                                <button
-                                    onClick={() => onRemovePlayer(player.id)}
-                                    className="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
+                                {isOwner && (
+                                    <button
+                                        onClick={() => onRemovePlayer(player.id)}
+                                        className="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                )}
                             </div>
                         ))}
                         {teamA.length < game.teamSize && (

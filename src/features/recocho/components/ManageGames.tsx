@@ -30,7 +30,7 @@ export function ManageGames({ activeGames, myGames, onJoinGame, onBack }: Manage
                 Volver
             </button>
 
-            <h2 className="text-3xl font-bold text-white mb-8">Administrar Recochos</h2>
+            <h2 className="text-3xl font-bold text-white mb-8">Ver recochos activos</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Join by Code */}
