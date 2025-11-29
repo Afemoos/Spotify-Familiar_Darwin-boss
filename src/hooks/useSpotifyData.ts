@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc, writeBatch, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth, db } from '../config/firebase';
 import { Member, PaymentData, Request } from '../types';
@@ -76,16 +76,43 @@ export function useSpotifyData(groupId?: string) {
             isExempt
         };
         try {
+            const batch = writeBatch(db);
+
+            // 1. Add Member Doc
             const docRef = doc(db, 'groups', groupId, 'members', newId);
-            await setDoc(docRef, newMember);
+            batch.set(docRef, newMember);
+
+            // 2. Update Group memberUids if userId is present
+            if (userId) {
+                const groupRef = doc(db, 'groups', groupId);
+                batch.update(groupRef, {
+                    memberUids: arrayUnion(userId)
+                });
+            }
+
+            await batch.commit();
         } catch (e) { console.error(e); throw e; }
     };
 
     const removeMember = async (id: string) => {
         if (!groupId) return;
         try {
+            const memberToRemove = members.find(m => m.id === id);
+            const batch = writeBatch(db);
+
+            // 1. Delete Member Doc
             const docRef = doc(db, 'groups', groupId, 'members', id);
-            await deleteDoc(docRef);
+            batch.delete(docRef);
+
+            // 2. Remove from Group memberUids if userId exists
+            if (memberToRemove?.userId) {
+                const groupRef = doc(db, 'groups', groupId);
+                batch.update(groupRef, {
+                    memberUids: arrayRemove(memberToRemove.userId)
+                });
+            }
+
+            await batch.commit();
         } catch (e) { console.error(e); throw e; }
     };
 

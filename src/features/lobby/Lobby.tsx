@@ -21,12 +21,17 @@ interface LobbyProps {
 export function Lobby({ onSelectApp, onNavigateToAuth }: LobbyProps) {
     const { user, logOut } = useAuth();
     const [showInfoModal, setShowInfoModal] = useState(false);
-    const { groups, currentGroup, selectGroup, createGroup } = useGroups();
+    const { groups, currentGroup, selectGroup, createGroup, joinGroupByCode, loadGroupForVisitor } = useGroups();
     const { members, payments, requestSpot } = useSpotifyData(currentGroup?.id);
     const [todaysRoutine, setTodaysRoutine] = useState<string[] | null>(null);
     const [loadingInfo, setLoadingInfo] = useState(false);
     const [newGroupName, setNewGroupName] = useState('');
     const [isCreatingGroup, setIsCreatingGroup] = useState(false);
+    const [joinCode, setJoinCode] = useState('');
+    const [isJoining, setIsJoining] = useState(false);
+    const [visitorCode, setVisitorCode] = useState('');
+    const [loadingVisitor, setLoadingVisitor] = useState(false);
+
 
     const handleAppClick = (appId: string) => {
         onSelectApp(appId);
@@ -209,8 +214,38 @@ export function Lobby({ onSelectApp, onNavigateToAuth }: LobbyProps) {
 
             {/* Visitor Request for unlinked users */}
             {user && !spotifyStatus && !currentGroup && (
-                <div className="w-full max-w-md mx-auto px-6 mt-8 z-20 relative">
+                <div className="w-full max-w-md mx-auto px-6 mt-8 z-20 relative space-y-8">
                     <VisitorRequest onRequestSpot={requestSpot} />
+
+                    {/* Visitor Code Access */}
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                        <h3 className="text-lg font-bold text-white mb-4 text-center">¿Tienes un código de invitado?</h3>
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                placeholder="Código (ej. ABC123)"
+                                value={visitorCode}
+                                onChange={(e) => setVisitorCode(e.target.value.toUpperCase())}
+                                className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white uppercase text-center"
+                                maxLength={6}
+                            />
+                            <button
+                                onClick={async () => {
+                                    if (visitorCode.length < 6) return;
+                                    setLoadingVisitor(true);
+                                    const success = await loadGroupForVisitor(visitorCode);
+                                    if (!success) {
+                                        alert("Código no encontrado");
+                                    }
+                                    setLoadingVisitor(false);
+                                }}
+                                disabled={loadingVisitor || visitorCode.length < 6}
+                                className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl font-bold transition-colors disabled:opacity-50"
+                            >
+                                {loadingVisitor ? '...' : 'Ver'}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -253,6 +288,37 @@ export function Lobby({ onSelectApp, onNavigateToAuth }: LobbyProps) {
                                     className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-xl font-bold transition-colors disabled:opacity-50"
                                 >
                                     {isCreatingGroup ? 'Creando...' : 'Crear'}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Join by Code */}
+                        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                            <h3 className="text-xl font-bold text-white mb-4">Unirse con Código</h3>
+                            <div className="flex gap-4">
+                                <input
+                                    type="text"
+                                    placeholder="Código de invitación (ej. ABC123)"
+                                    value={joinCode}
+                                    onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                                    className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white uppercase"
+                                    maxLength={6}
+                                />
+                                <button
+                                    onClick={async () => {
+                                        if (!joinCode.trim()) return;
+                                        setIsJoining(true);
+                                        const success = await joinGroupByCode(joinCode);
+                                        if (success) {
+                                            setJoinCode('');
+                                            // Optional: Show success message
+                                        }
+                                        setIsJoining(false);
+                                    }}
+                                    disabled={isJoining || joinCode.length < 6}
+                                    className="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-xl font-bold transition-colors disabled:opacity-50"
+                                >
+                                    {isJoining ? 'Uniéndose...' : 'Unirse'}
                                 </button>
                             </div>
                         </div>

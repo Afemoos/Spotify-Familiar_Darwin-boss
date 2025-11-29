@@ -25,6 +25,12 @@ export function SpotifyApp({ onBackToHub }: SpotifyAppProps) {
 
     const role: 'admin' | 'member' | 'visitor' = isAdmin ? 'admin' : (globalUser ? 'member' : 'visitor');
 
+    // Display Invite Code for Admins
+    if (role === 'admin' && currentGroup?.inviteCode) {
+        // We can pass this to the layout or display it here. 
+        // For now, let's pass it to the layouts.
+    }
+
     const changeMonth = (offset: number) => {
         const newDate = new Date(currentDate);
         newDate.setMonth(newDate.getMonth() + offset);
@@ -57,7 +63,8 @@ export function SpotifyApp({ onBackToHub }: SpotifyAppProps) {
         onRequestSpot: requestSpot,
         onAcceptRequest: acceptRequest,
         onRejectRequest: rejectRequest,
-        onToggleExempt: toggleMemberExempt
+        onToggleExempt: toggleMemberExempt,
+        inviteCode: currentGroup?.inviteCode
     };
 
     return isMobile ? (

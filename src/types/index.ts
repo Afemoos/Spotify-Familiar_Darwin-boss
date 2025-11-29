@@ -33,6 +33,8 @@ export interface Group {
     ownerId: string;
     name: string;
     createdAt: number;
+    memberUids?: string[]; // Array of UIDs of members who have access
+    inviteCode?: string; // 6-character unique code for joining/viewing
 }
 
 export type UserRole = 'admin' | 'member' | 'visitor';

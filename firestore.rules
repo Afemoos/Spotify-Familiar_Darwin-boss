@@ -10,31 +10,62 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
+    // Reglas para Invites (Códigos de acceso)
+    match /invites/{code} {
+      allow read: if true; // Cualquiera puede buscar un código
+      allow write: if request.auth != null; // Solo autenticados pueden crear códigos (al crear grupo)
+    }
+
     // Reglas para Grupos (Multi-Tenant)
     match /groups/{groupId} {
-      // Allow Darwin to do anything (Migration/Admin)
+      // PERMISO ESPECIAL PARA DARWIN (MIGRACIÓN)
       allow read, write: if request.auth.token.email == 'darwin47@elprivado.app';
 
-      // Leer: Si eres el dueño O si eres miembro del grupo (verificado en subcolección members)
-      // Escribir: Solo el dueño
-      allow read: if request.auth != null && (
+      // Leer: 
+      // 1. Dueño
+      // 2. Miembro (en memberUids o subcolección)
+      // 3. Cualquiera que conozca el ID (para visitantes con código) -> Permitimos GET, pero LIST restringido
+      allow get: if true; 
+      
+      allow list: if request.auth != null && (
         resource.data.ownerId == request.auth.uid ||
-        exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid))
+        resource.data.memberUids.hasAny([request.auth.uid])
       );
-      allow create: if request.auth != null; // Cualquiera puede crear un grupo
-      allow update, delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
+
+      // Crear grupo: Cualquiera autenticado
+      allow create: if request.auth != null;
+      // Actualizar/Borrar grupo: Solo el dueño (o admin para updates específicos como unirse)
+      allow update: if request.auth != null && (
+        resource.data.ownerId == request.auth.uid ||
+        // Permitir a usuarios añadirse a sí mismos a memberUids si tienen el código (manejado por backend/context)
+        // Por ahora, simplificamos: Update solo dueño o si eres miembro.
+        // La lógica de "Unirse" la haremos añadiendo el UID al array.
+        resource.data.memberUids.hasAny([request.auth.uid]) ||
+         // Permitir update si estamos añadiendo nuestro propio UID (Join) - esto es complejo en reglas,
+         // mejor dejar que el dueño o un proceso seguro lo haga, O confiar en que el cliente tiene el ID.
+         // Para simplificar y no bloquear: permitimos update si auth != null. 
+         // ¡CUIDADO! Esto permite a cualquiera editar el grupo si tiene el ID.
+         // Mejor: Solo dueño puede editar metadatos. Miembros solo pueden leer.
+         // Para unirse, usaremos una Cloud Function o un permiso específico?
+         // Solución pragmática: Permitir update de 'memberUids' a cualquiera autenticado (para unirse).
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberUids'])
+      );
+      
+      allow delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
 
       match /members/{memberId} {
-         allow read: if request.auth != null; // Simplificado por ahora, idealmente verificar membresía
-         allow write: if request.auth != null; // Simplificado, idealmente solo dueño o admin del grupo
+         allow read: if true; // Permitir leer miembros si conoces el grupo (para visitantes)
+         allow write: if request.auth != null;
       }
       
       match /payments/{paymentId} {
-         allow read, write: if request.auth != null;
+         allow read: if true;
+         allow write: if request.auth != null;
       }
 
       match /requests/{requestId} {
-         allow read, write: if request.auth != null;
+         allow read: if true;
+         allow write: if request.auth != null;
       }
     }
 
