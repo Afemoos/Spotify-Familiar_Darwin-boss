@@ -20,7 +20,7 @@ export function MigrationTool() {
             const groupRef = doc(db, 'groups', 'darwin-legacy');
             await setDoc(groupRef, {
                 id: 'darwin-legacy',
-                ownerId: '78M62251d0O4bC9y6Z84tQ63e4h2', // Darwin's UID
+                ownerId: user.uid, // Use current user's UID
                 name: 'Familia Darwin',
                 createdAt: Date.now()
             }, { merge: true });
@@ -78,9 +78,9 @@ export function MigrationTool() {
                 }
             });
 
-            // Add owner (Darwin)
-            if (!memberUids.includes('78M62251d0O4bC9y6Z84tQ63e4h2')) {
-                memberUids.push('78M62251d0O4bC9y6Z84tQ63e4h2');
+            // Add owner (Darwin - current user)
+            if (user.uid && !memberUids.includes(user.uid)) {
+                memberUids.push(user.uid);
             }
 
             // Generate Code if not exists

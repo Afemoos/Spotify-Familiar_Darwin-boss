@@ -207,6 +207,17 @@ export function Lobby({ onSelectApp, onNavigateToAuth }: LobbyProps) {
                                     </p>
                                 )}
                             </div>
+
+                            <button
+                                onClick={() => {
+                                    logOut();
+                                    setShowInfoModal(false);
+                                }}
+                                className="w-full flex items-center justify-center gap-2 p-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl text-red-400 transition-colors font-medium"
+                            >
+                                <LogOut className="w-4 h-4" />
+                                Cerrar Sesión
+                            </button>
                         </div>
                     </div>
                 </div>

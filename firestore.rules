@@ -20,6 +20,11 @@ service cloud.firestore {
     match /groups/{groupId} {
       // PERMISO ESPECIAL PARA DARWIN (MIGRACIÓN)
       allow read, write: if request.auth.token.email == 'darwin47@elprivado.app';
+      
+      // Allow migration for the legacy group specifically
+      match /groups/darwin-legacy {
+          allow read, write: if request.auth != null;
+      }
 
       // Leer: 
       // 1. Dueño
