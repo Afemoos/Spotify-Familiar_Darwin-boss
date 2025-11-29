@@ -21,7 +21,7 @@ interface LobbyProps {
 export function Lobby({ onSelectApp, onNavigateToAuth }: LobbyProps) {
     const { user, logOut } = useAuth();
     const [showInfoModal, setShowInfoModal] = useState(false);
-    const { groups, currentGroup, selectGroup, createGroup, isLoading: loadingGroups } = useGroups();
+    const { groups, currentGroup, selectGroup, createGroup } = useGroups();
     const { members, payments, requestSpot } = useSpotifyData(currentGroup?.id);
     const [todaysRoutine, setTodaysRoutine] = useState<string[] | null>(null);
     const [loadingInfo, setLoadingInfo] = useState(false);

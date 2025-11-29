@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth, db, APP_ID } from '../config/firebase';
+import { auth, db } from '../config/firebase';
 import { Member, PaymentData, Request } from '../types';
 
 export function useSpotifyData(groupId?: string) {
